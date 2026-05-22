@@ -86,7 +86,7 @@ export function Hero() {
                 <div className="w-8 h-8 rounded-full bg-ocean-100 flex items-center justify-center">
                   <Star className="w-4 h-4 text-ocean-600" />
                 </div>
-                <p className="text-xs font-medium text-gray-700">10 pages of magic</p>
+                <p className="text-xs font-medium text-gray-700">8 pages of Magic</p>
               </div>
             </div>
           </div>
