@@ -1,0 +1,60 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Header } from './components/Header';
+import { Hero } from './components/Hero';
+import { TrustStrip } from './components/TrustStrip';
+import { ProblemSection } from './components/ProblemSection';
+import { SolutionSection } from './components/SolutionSection';
+import { HowItWorks } from './components/HowItWorks';
+import { Features } from './components/Features';
+import { Testimonials } from './components/Testimonials';
+import { FAQ } from './components/FAQ';
+import { FinalCTA } from './components/FinalCTA';
+import { Footer } from './components/Footer';
+import { WizardLayout } from './pages/create/WizardLayout';
+import { PhotoUpload } from './pages/create/PhotoUpload';
+import { ChildProfile } from './pages/create/ChildProfile';
+import { ThemeSelection } from './pages/create/ThemeSelection';
+import { StoryGenerating } from './pages/create/StoryGenerating';
+import { StoryReader } from './pages/create/StoryReader';
+import { WizardProvider } from './context/WizardContext';
+import { ArchitectureDoc } from './pages/ArchitectureDoc';
+
+function LandingPage() {
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <Hero />
+      <TrustStrip />
+      <ProblemSection />
+      <SolutionSection />
+      <HowItWorks />
+      <Features />
+      <Testimonials />
+      <FAQ />
+      <FinalCTA />
+      <Footer />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <WizardProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/architecture" element={<ArchitectureDoc />} />
+          <Route path="/create" element={<WizardLayout />}>
+            <Route path="photos" element={<PhotoUpload />} />
+            <Route path="profile" element={<ChildProfile />} />
+            <Route path="theme" element={<ThemeSelection />} />
+            <Route path="generating" element={<StoryGenerating />} />
+            <Route path="story/:storyId" element={<StoryReader />} />
+          </Route>
+        </Routes>
+      </WizardProvider>
+    </BrowserRouter>
+  );
+}
+
+export default App;
