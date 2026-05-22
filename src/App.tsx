@@ -17,7 +17,6 @@ import { ThemeSelection } from './pages/create/ThemeSelection';
 import { StoryGenerating } from './pages/create/StoryGenerating';
 import { StoryReader } from './pages/create/StoryReader';
 import { WizardProvider } from './context/WizardContext';
-import { ArchitectureDoc } from './pages/ArchitectureDoc';
 
 function LandingPage() {
   return (
@@ -43,7 +42,6 @@ function App() {
       <WizardProvider>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/architecture" element={<ArchitectureDoc />} />
           <Route path="/create" element={<WizardLayout />}>
             <Route path="photos" element={<PhotoUpload />} />
             <Route path="profile" element={<ChildProfile />} />

@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, BookOpen, Home, RotateCcw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useWizard } from '../../context/WizardContext';
 import type { Story, StoryPage } from '../../lib/types';
 
 export function StoryReader() {
   const { storyId } = useParams<{ storyId: string }>();
+  const { reset } = useWizard();
   const [story, setStory] = useState<Story | null>(null);
   const [pages, setPages] = useState<StoryPage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -143,7 +145,7 @@ export function StoryReader() {
       </div>
 
       <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <Link to="/create/photos" className="btn-secondary">
+        <Link to="/create/photos" onClick={reset} className="btn-secondary">
           <RotateCcw className="w-4 h-4 mr-2" />
           Create Another Story
         </Link>

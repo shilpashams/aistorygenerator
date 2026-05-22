@@ -1,6 +1,5 @@
-import { Outlet, useLocation, Link, useNavigate } from 'react-router-dom';
-import { BookOpen, ArrowLeft, Zap } from 'lucide-react';
-import { useWizard } from '../../context/WizardContext';
+import { Outlet, useLocation, Link } from 'react-router-dom';
+import { BookOpen, ArrowLeft } from 'lucide-react';
 
 const steps = [
   { path: '/create/photos', label: 'Photos' },
@@ -9,42 +8,8 @@ const steps = [
   { path: '/create/generating', label: 'Story' },
 ];
 
-const TEST_PHOTO_URL = 'https://images.pexels.com/photos/1619697/pexels-photo-1619697.jpeg?auto=compress&cs=tinysrgb&w=600';
-
-async function fetchTestPhoto(): Promise<File> {
-  const response = await fetch(TEST_PHOTO_URL);
-  const blob = await response.blob();
-  return new File([blob], 'test-child.jpg', { type: 'image/jpeg' });
-}
-
 export function WizardLayout() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { updateData } = useWizard();
-
-  async function handleAutofill() {
-    const testPhoto = await fetchTestPhoto();
-    const previewUrl = URL.createObjectURL(testPhoto);
-    updateData({
-      photos: [testPhoto],
-      photoPreviewUrls: [previewUrl],
-      name: 'Emma',
-      age: 5,
-      nickname: 'Emmy',
-      interests: ['Dinosaurs', 'Space', 'Art & Drawing'],
-      favorite_things: 'Purple, cats, pasta',
-      favorite_toy: 'Stuffed elephant named Peanut',
-      proud_of: 'Learning to ride a bike',
-      currently_learning: 'How to tie shoes',
-      story_mood: 'Silly Adventure',
-      family_phrase: 'You can do hard things!',
-      themes_to_avoid: '',
-      reading_level: 'beginner',
-      theme: 'dinosaurs',
-      illustration_style: 'cartoon',
-    });
-    navigate('/create/generating');
-  }
   const currentStepIndex = steps.findIndex(s => location.pathname.startsWith(s.path));
   const isGenerating = location.pathname.includes('generating') || location.pathname.includes('story/');
 
@@ -62,14 +27,7 @@ export function WizardLayout() {
             <span className="font-display font-bold text-lg text-gray-900">Adventures Of</span>
           </Link>
 
-          <button
-            onClick={handleAutofill}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 transition-colors"
-            title="Autofill wizard with test data"
-          >
-            <Zap className="w-3 h-3" />
-            <span className="hidden sm:inline">Test</span>
-          </button>
+          <div className="w-12" />
         </div>
 
         {!isGenerating && (

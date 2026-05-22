@@ -36,18 +36,18 @@ export function StoryGenerating() {
   const navigate = useNavigate();
   const [messageIndex, setMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  const hasStarted = useRef(false);
   const storyIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
+    let cancelled = false;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
     async function generateStory() {
       try {
         const sessionId = getSessionId();
 
         const photoUrls = await uploadPhotos(data.photos, sessionId);
+        if (cancelled) return;
 
         const { data: profile, error: profileError } = await supabase
           .from('child_profiles')
@@ -65,6 +65,7 @@ export function StoryGenerating() {
           .single();
 
         if (profileError) throw profileError;
+        if (cancelled) return;
 
         const { data: story, error: storyError } = await supabase
           .from('stories')
@@ -78,6 +79,7 @@ export function StoryGenerating() {
           .single();
 
         if (storyError) throw storyError;
+        if (cancelled) return;
         storyIdRef.current = story.id;
 
         const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-story`;
@@ -110,38 +112,46 @@ export function StoryGenerating() {
           console.error('Edge function error:', response.status, await response.text().catch(() => ''));
         }
 
-        pollForCompletion(story.id);
+        if (!cancelled) {
+          startPolling(story.id);
+        }
       } catch (err) {
         console.error('Story generation error:', err);
+        if (cancelled) return;
         if (storyIdRef.current) {
-          pollForCompletion(storyIdRef.current);
+          startPolling(storyIdRef.current);
         } else {
           navigate('/create/theme');
         }
       }
     }
 
+    function startPolling(storyId: string) {
+      pollInterval = setInterval(async () => {
+        const { data: storyData } = await supabase
+          .from('stories')
+          .select('status')
+          .eq('id', storyId)
+          .maybeSingle();
+
+        if (storyData?.status === 'complete') {
+          if (pollInterval) clearInterval(pollInterval);
+          setProgress(100);
+          setTimeout(() => navigate(`/create/story/${storyId}`), 600);
+        } else if (storyData?.status === 'failed') {
+          if (pollInterval) clearInterval(pollInterval);
+          navigate(`/create/story/${storyId}`);
+        }
+      }, 2000);
+    }
+
     generateStory();
+
+    return () => {
+      cancelled = true;
+      if (pollInterval) clearInterval(pollInterval);
+    };
   }, []);
-
-  function pollForCompletion(storyId: string) {
-    const interval = setInterval(async () => {
-      const { data: storyData } = await supabase
-        .from('stories')
-        .select('status')
-        .eq('id', storyId)
-        .maybeSingle();
-
-      if (storyData?.status === 'complete') {
-        clearInterval(interval);
-        setProgress(100);
-        setTimeout(() => navigate(`/create/story/${storyId}`), 600);
-      } else if (storyData?.status === 'failed') {
-        clearInterval(interval);
-        navigate(`/create/story/${storyId}`);
-      }
-    }, 2000);
-  }
 
   useEffect(() => {
     const interval = setInterval(() => {
