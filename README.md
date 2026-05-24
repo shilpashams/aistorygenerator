@@ -1,4 +1,4 @@
-# ✨ AI Story Generator: Advetures of
+# ✨ AI Story Generator: Adventures of
 
 An AI-powered storytelling platform that transforms a few photos and prompts into personalized illustrated stories for children.
 
