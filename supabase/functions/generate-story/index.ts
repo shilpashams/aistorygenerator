@@ -778,37 +778,54 @@ RESPOND IN THIS EXACT JSON FORMAT (no markdown, no code blocks, just raw JSON):
 }
 
 async function callOpenAI(openaiKey: string, system: string, user: string, temperature: number, maxTokens: number): Promise<string> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${openaiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature,
-      max_tokens: maxTokens,
-      response_format: { type: "json_object" },
-    }),
-  });
+  const maxRetries = 5;
 
-  if (!response.ok) {
-    const err = await response.text();
-    console.error("OpenAI request failed:", response.status, err.substring(0, 500));
-    throw new Error(`OpenAI API error: ${response.status} - ${err}`);
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        temperature,
+        max_tokens: maxTokens,
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (response.status === 429) {
+      const retryAfterHeader = response.headers.get("retry-after");
+      let waitMs = (attempt + 1) * 21000; // default: 21s, 42s, 63s...
+      if (retryAfterHeader) {
+        waitMs = Math.max(parseInt(retryAfterHeader, 10) * 1000, 21000);
+      }
+      console.log(`Rate limited (429). Attempt ${attempt + 1}/${maxRetries}. Waiting ${waitMs / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+      continue;
+    }
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("OpenAI request failed:", response.status, err.substring(0, 500));
+      throw new Error(`OpenAI API error: ${response.status} - ${err}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      console.error("OpenAI returned empty content:", JSON.stringify(data).substring(0, 500));
+      throw new Error("OpenAI returned empty content");
+    }
+    return content.trim();
   }
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    console.error("OpenAI returned empty content:", JSON.stringify(data).substring(0, 500));
-    throw new Error("OpenAI returned empty content");
-  }
-  return content.trim();
+  throw new Error("OpenAI rate limit exceeded after maximum retries");
 }
 
 async function analyzeChildPhoto(openaiKey: string, photoUrl: string): Promise<string> {
@@ -858,88 +875,130 @@ Example bad output: anything mentioning skin, race, weight, attractiveness, age-
   return content;
 }
 
+function buildCombinedStoryPrompt(req: StoryRequest, childVisualDetails: string): string {
+  const creativeSeed = generateCreativeSeed();
+  const readingLevelBlock = getReadingLevelPromptBlock(req.reading_level);
+  const cfg = readingLevelConfig[req.reading_level] || readingLevelConfig.beginner;
+
+  const themeWorldBuilding: Record<string, string> = {
+    dinosaurs: `WORLD: A warm prehistoric valley with giant ferns, sparkly river, friendly dinosaurs. SIDEKICK IDEAS: clumsy baby triceratops, chatty pterodactyl, gentle brachiosaurus.`,
+    space: `WORLD: A cozy spaceship visiting colorful planets and twinkling stars. SIDEKICK IDEAS: sparkly crystal creature, bouncy jelly-blob alien, kind station keeper.`,
+    "enchanted-forest": `WORLD: A deep magical forest with glowing mushrooms, mossy paths, babbling brook. SIDEKICK IDEAS: badger in berry-stained apron, copper-feathered owl, woodland mice.`,
+    superhero: `WORLD: A friendly neighborhood with park, shops, rooftops to leap between. SIDEKICK IDEAS: flour-dusted baker with courage-cakes, speedy crossing guard, kind neighbors.`,
+    "fairy-tale": `WORLD: A storybook kingdom with wonky castle, rolling hills, cobblestone village. SIDEKICK IDEAS: tiny dragon afraid of fire, fairy godparent always late, jolly king.`,
+  };
+
+  const storyMoodGuidance: Record<string, string> = {
+    "bedtime-calm": "TONE: Gentle, quiet, soothing. End with warmth and safety.",
+    "silly-adventure": "TONE: Playful, giggly, full of surprises and funny sounds.",
+    "bravery": "TONE: Encouraging, empowering. Child discovers they're braver than they thought.",
+    "friendship": "TONE: Warm, kind, connected. Celebrates being there for someone.",
+    "confidence": "TONE: Affirming, celebratory. Child tries something new and succeeds.",
+    "curiosity": "TONE: Wondering, exploratory, delighted by discovery.",
+  };
+
+  return `You are a world-class children's picture book author. Write a COMPLETE, UNIQUE story for a child.
+
+${creativeSeed}
+
+${readingLevelBlock}
+
+CHILD: ${req.name}, age ${req.age}
+- Interests: ${req.interests.join(", ")}
+- Favorite things: ${req.favorite_things || "not specified"}
+- Favorite toy: ${req.favorite_toy || "not specified"}
+- Nickname: ${req.nickname || "none"}
+- Proud of: ${req.proud_of || "not specified"}
+- Learning: ${req.currently_learning || "not specified"}
+- Family phrase: ${req.family_phrase || "none"}
+- Themes to AVOID: ${req.themes_to_avoid || "none"}
+- Visual from photo: ${childVisualDetails !== "no details extracted" ? childVisualDetails : "none available"}
+
+THEME: ${req.theme}
+${themeWorldBuilding[req.theme] || themeWorldBuilding["enchanted-forest"]}
+
+MOOD: ${req.story_mood || "silly-adventure"}
+${storyMoodGuidance[req.story_mood] || storyMoodGuidance["silly-adventure"]}
+
+PERSONALIZATION RULES:
+- The child's interests MUST be active in the plot (they DO things with them)
+- Their favorite toy should appear as a magical item or companion if provided
+- Their strength/pride should be HOW they solve the problem
+- Create a memorable sidekick with a fun name (like Bramblesnout, Fizzbeak, Crumblewhisk)
+- Include a musical 5-8 word refrain that appears on at least 3 pages
+
+WRITING CONSTRAINTS:
+- EXACTLY ${cfg.pages} pages
+- ${cfg.sentencesPerPage[0]}-${cfg.sentencesPerPage[1]} sentences per page (STRICT)
+- ${cfg.wordsPerSentence[0]}-${cfg.wordsPerSentence[1]} words per sentence (STRICT)
+- Story arc: ${cfg.arcStructure}
+- End with "The End."
+- Each page needs one onomatopoeia (SPLASH! WHOOSH! etc.)
+
+For each page, also write a SHORT (max 25 words) illustration prompt describing the scene action.
+
+RESPOND IN THIS EXACT JSON FORMAT (no markdown, no code blocks):
+{
+  "title": "A catchy title a 4-year-old would love",
+  "pages": [
+    {"page_number": 1, "text": "story text...", "illustration_prompt": "scene description for image generator..."},
+    {"page_number": 2, "text": "...", "illustration_prompt": "..."},
+    {"page_number": 3, "text": "...", "illustration_prompt": "..."},
+    {"page_number": 4, "text": "...", "illustration_prompt": "..."},
+    {"page_number": 5, "text": "...", "illustration_prompt": "..."},
+    {"page_number": 6, "text": "...", "illustration_prompt": "..."},
+    {"page_number": 7, "text": "...", "illustration_prompt": "..."},
+    {"page_number": 8, "text": "...", "illustration_prompt": "..."}
+  ]
+}`;
+}
+
 async function generateWithAI(req: StoryRequest): Promise<GeneratedStory> {
   const openaiKey = Deno.env.get("OPENAI_API_KEY");
   if (!openaiKey) {
     throw new Error("NO_API_KEY");
   }
 
-  // Step 0: Analyze child photo for safe visual details
+  // Step 0: Analyze child photo for safe visual details (non-fatal)
   let childVisualDetails = "no details extracted";
   if (req.photo_urls && req.photo_urls.length > 0) {
     try {
       childVisualDetails = await analyzeChildPhoto(openaiKey, req.photo_urls[0]);
       console.log("Photo analysis complete:", childVisualDetails.substring(0, 100));
     } catch (e) {
-      console.log("Photo analysis failed:", (e as Error).message);
+      console.log("Photo analysis failed (non-fatal):", (e as Error).message);
       childVisualDetails = "no details extracted";
     }
   }
 
-  // Step 1: Generate Story Bible
-  console.log("Step 1: Generating Story Bible...");
-  const bibleRaw = await callOpenAI(
+  // Step 1: Generate complete story + illustration prompts in a single call
+  console.log("Step 1: Generating complete story...");
+  const storyRaw = await callOpenAI(
     openaiKey,
-    "You are a world-class children's picture book author. You plan stories meticulously before writing. Every story you create is completely original and different from anything you've written before. Always respond with valid JSON only, no markdown, no code fences.",
-    buildStoryBiblePrompt(req, childVisualDetails),
+    "You are a beloved children's picture book author. You write stories that are simple, musical, emotionally true, and completely unique every time. Always respond with valid JSON only, no markdown, no code fences.",
+    buildCombinedStoryPrompt(req, childVisualDetails),
     0.85,
     4096
   );
-  const storyBible = bibleRaw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-
-  try {
-    JSON.parse(storyBible);
-  } catch (e) {
-    console.log("Story Bible JSON parse failed, using raw text. Error:", (e as Error).message);
-  }
-
-  // Step 2: Write the story text
-  console.log("Step 2: Writing story text...");
-  const storyRaw = await callOpenAI(
-    openaiKey,
-    "You write beloved children's picture books for ages 3-6. Your stories are simple, musical, and emotionally true. Follow the Story Bible exactly. Always respond with valid JSON only, no markdown.",
-    buildStoryFromBiblePrompt(req, storyBible),
-    0.7,
-    3000
-  );
   const storyJson = storyRaw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-  const storyParsed: { title: string; pages: { page_number: number; text: string }[] } = JSON.parse(storyJson);
+  const storyParsed: { title: string; pages: { page_number: number; text: string; illustration_prompt?: string }[] } = JSON.parse(storyJson);
 
   if (!storyParsed.title || !storyParsed.pages || storyParsed.pages.length === 0) {
     throw new Error("Invalid story format from AI");
   }
-  console.log("Step 2 complete: title =", storyParsed.title, "pages =", storyParsed.pages.length);
+  console.log("Story generated:", storyParsed.title, "pages =", storyParsed.pages.length);
 
-  // Step 2b: Editorial review (non-fatal)
-  try {
-    console.log("Step 2b: Editorial review...");
-    const editedStoryRaw = await callOpenAI(
-      openaiKey,
-      "You are a senior children's book editor specializing in ages 3-6. You review and revise text to meet the highest standards. Always respond with valid JSON only, no markdown.",
-      buildEditorialReviewPrompt(req, storyBible, storyParsed.pages),
-      0.4,
-      3000
-    );
-    const editedStoryJson = editedStoryRaw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const editedParsed: { pages: { page_number: number; text: string }[] } = JSON.parse(editedStoryJson);
-
-    if (editedParsed.pages && editedParsed.pages.length === storyParsed.pages.length) {
-      storyParsed.pages = editedParsed.pages;
-    }
-  } catch (e) {
-    console.log("Editorial review failed (non-fatal), using original text:", (e as Error).message);
-  }
-
-  // Step 2c: Reading-level validation (non-fatal)
+  // Step 2: Reading-level validation + fix in a single call (non-fatal)
   try {
     const validation = validateStoryAgainstLevel(storyParsed.pages, req.reading_level);
 
     if (!validation.allPassed && validation.failingPages.length > 0) {
-      console.log("Step 2c: Validation found", validation.failingPages.length, "failing pages, rewriting...");
+      console.log("Validation found", validation.failingPages.length, "failing pages, requesting fix...");
+      const storyBibleSummary = JSON.stringify({ title: storyParsed.title, pages: storyParsed.pages.map(p => ({ page_number: p.page_number, text: p.text })) });
       const rewriteRaw = await callOpenAI(
         openaiKey,
         "You are a children's book editor who fixes pages that fail reading-level requirements. You count words and sentences precisely. Always respond with valid JSON only, no markdown.",
-        buildTargetedRewritePrompt(req, storyBible, storyParsed.pages, validation),
+        buildTargetedRewritePrompt(req, storyBibleSummary, storyParsed.pages, validation),
         0.4,
         3000
       );
@@ -953,61 +1012,27 @@ async function generateWithAI(req: StoryRequest): Promise<GeneratedStory> {
             storyParsed.pages[idx].text = rewritten.text;
           }
         }
+        console.log("Fixed", rewriteParsed.rewritten_pages.length, "pages");
       }
+    } else {
+      console.log("All pages passed validation");
     }
   } catch (e) {
     console.log("Validation/rewrite failed (non-fatal):", (e as Error).message);
   }
 
-  // Step 3a: Generate Character Sheet (non-fatal)
-  let characterSheet = childVisualDetails;
-  try {
-    console.log("Step 3a: Generating Character Sheet...");
-    const characterSheetRaw = await callOpenAI(
-      openaiKey,
-      "You are a character design artist for children's picture books. You create precise character reference sheets that ensure visual consistency across all illustrations. Always respond with valid JSON only, no markdown.",
-      buildCharacterSheetPrompt(childVisualDetails, req.illustration_style, storyBible),
-      0.4,
-      2000
-    );
-    const characterSheetJson = characterSheetRaw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const characterSheetParsed = JSON.parse(characterSheetJson);
-    characterSheet = characterSheetParsed.character_sheet
-      ? Object.entries(characterSheetParsed.character_sheet)
-          .map(([key, value]) => `${key.toUpperCase().replace(/_/g, " ")}: ${value}`)
-          .join("\n")
-      : characterSheetJson;
-  } catch (e) {
-    console.log("Character sheet generation failed (non-fatal), using photo details:", (e as Error).message);
-  }
-
-  // Step 3b: Generate illustration prompts
-  console.log("Step 3b: Generating illustration prompts...");
-  const illustrationRaw = await callOpenAI(
-    openaiKey,
-    "You are an expert art director for children's picture books. You write precise, consistent illustration prompts for AI image generators. Always respond with valid JSON only, no markdown.",
-    buildIllustrationPromptsPrompt(storyBible, storyParsed.pages, req.illustration_style, characterSheet),
-    0.7,
-    4000
-  );
-  const illustrationJson = illustrationRaw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-  const illustrationParsed: { illustration_prompts: { page_number: number; illustration_prompt: string }[] } = JSON.parse(illustrationJson);
-
-  // Merge story text with illustration prompts
-  const mergedPages: GeneratedPage[] = storyParsed.pages.map(page => {
-    const matching = illustrationParsed.illustration_prompts.find(p => p.page_number === page.page_number);
-    return {
-      page_number: page.page_number,
-      text: page.text,
-      illustration_prompt: matching?.illustration_prompt || "",
-    };
-  });
+  // Build final pages
+  const mergedPages: GeneratedPage[] = storyParsed.pages.map(page => ({
+    page_number: page.page_number,
+    text: page.text,
+    illustration_prompt: page.illustration_prompt || page.text.substring(0, 80),
+  }));
 
   console.log("AI generation complete:", storyParsed.title);
   return {
     title: storyParsed.title,
     pages: mergedPages,
-    characterSheet,
+    characterSheet: childVisualDetails,
   };
 }
 
