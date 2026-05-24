@@ -1,8 +1,8 @@
 # AI Pipeline Architecture Document
 ## AI Children's Storybook Application
 
-**Version**: 2.0  
-**Date**: 2026-05-21  
+**Version**: 3.0  
+**Date**: 2026-05-24  
 **Models**: OpenAI GPT-4o, fal.ai Flux Pro Kontext/Max  
 **Runtime**: Supabase Edge Functions (Deno)
 
@@ -10,7 +10,7 @@
 
 ## Pipeline Overview
 
-The AI pipeline generates a complete 8-page personalized children's storybook from a child's profile and photos. It orchestrates 6-8 sequential OpenAI calls for text generation, followed by 8 parallel fal.ai calls for illustration, each with up to 2 quality-check retries.
+The AI pipeline generates a complete 8-page personalized children's storybook from a child's profile and photos. It uses a consolidated 1-2 OpenAI API call approach (optimized for low-tier rate limits of 3 RPM) with automatic retry/backoff, followed by 8 parallel fal.ai calls for illustration.
 
 ```
 INPUT:                           OUTPUT:
@@ -20,26 +20,26 @@ INPUT:                           OUTPUT:
 | Interests[]      |             |   - text_content |
 | Reading Level    |   PIPELINE  |   - illustration |
 | Theme            | ==========> | Character Sheet  |
-| Style            |             | Story Bible      |
-| Photo URLs[]     |             +------------------+
+| Style            |             +------------------+
+| Photo URLs[]     |
 | Personality Data |
 +------------------+
 
 PIPELINE STEPS:
-  0. Photo Analysis        [GPT-4o Vision, T=0.3, 200 tok]
-  1. Story Bible           [GPT-4o Chat,   T=0.7, 4096 tok]
-  2. Story Writing         [GPT-4o Chat,   T=0.7, 3000 tok]
-  2b. Editorial Review     [GPT-4o Chat,   T=0.4, 3000 tok] (non-fatal)
-  2c. Validation + Rewrite [Local + GPT-4o, T=0.4, 3000 tok] (non-fatal)
-  3a. Character Sheet      [GPT-4o Chat,   T=0.4, 2000 tok] (non-fatal)
-  3b. Illustration Prompts [GPT-4o Chat,   T=0.7, 4000 tok]
-  4.  Image Generation     [fal.ai x8 parallel, 120s timeout each]
-  4b. Quality Checks       [GPT-4o Vision x8, T=0.2, 500 tok each]
+  0. Photo Analysis             [GPT-4o Vision, T=0.3, 200 tok] (non-fatal, only if photos provided)
+  1. Combined Story Generation  [GPT-4o Chat, T=0.85, 4096 tok] (story text + illustration prompts in one call)
+  2. Validation + Rewrite       [Local check + GPT-4o, T=0.4, 3000 tok] (non-fatal, only if pages fail)
+  3. Image Generation           [fal.ai x8 parallel, 120s timeout each]
+
+RATE LIMIT HANDLING:
+  - OpenAI account limit: 3 RPM (requests per minute)
+  - Retry on 429: up to 5 attempts with 21s+ exponential backoff
+  - Pipeline designed to use max 2 API calls (1 if validation passes)
 ```
 
 ---
 
-## Step 0: Photo Analysis
+## Step 0: Photo Analysis (Non-Fatal)
 
 **Purpose:** Extract safe visual details from the child's photo for use in story illustrations while strictly avoiding any identity-sensitive descriptors.
 
@@ -65,127 +65,85 @@ PIPELINE STEPS:
 
 **Error Handling:** Silent catch -> defaults to "no details extracted". Pipeline continues regardless.
 
+**Note:** This call is subject to the same 429 retry logic (5 retries, 21s backoff). If it fails after all retries, pipeline proceeds without photo details.
+
 ---
 
-## Step 1: Story Bible Generation
+## Step 1: Combined Story Generation
 
-**Purpose:** Create a comprehensive narrative blueprint ensuring story coherence, deep personalization, and age-appropriateness before any text is written.
+**Purpose:** Generate the complete story text AND illustration prompts in a single API call. This consolidation (previously 5 separate calls: story bible, story text, editorial review, character sheet, illustration prompts) was implemented to work within the 3 RPM rate limit.
 
 **API Configuration:**
 | Parameter | Value |
 |-----------|-------|
 | Model | gpt-4o |
-| Temperature | 0.7 (creative freedom) |
+| Temperature | 0.85 (creative freedom) |
 | Max Tokens | 4096 |
-| Input | Full StoryRequest + childVisualDetails |
+| Input | Full StoryRequest + childVisualDetails + creative seed |
 
 ### Prompt Assembly Components
 
-**1. Theme World-Building (5 pre-defined templates):**
+The combined prompt integrates all personalization, reading-level constraints, and illustration direction into a single request:
 
-| Theme | Setting | Characters | Sensory Palette |
-|-------|---------|------------|-----------------|
-| Dinosaurs | Warm valley, ferns, river | Baby triceratops, pterodactyl, brachiosaurus | Earthy, warm, crunchy |
-| Space | Cozy spaceship, planets, stars | Crystal creatures, jelly-blobs, station keepers | Sparkly, humming, weightless |
-| Enchanted Forest | Magical forest, mushrooms, brook | Badger, owl, woodland mice | Mossy, rustling, glowing |
-| Superhero | Neighborhood, park, rooftops | Baker, crossing guard, neighbors | Urban, bustling, warm |
-| Fairy Tale | Castle, cobblestone village | Tiny dragon, fairy godparent, jolly king | Golden, silky, echoing |
+**1. Creative Seed (randomized per generation):**
+- Random opening scenario (12 variants)
+- Random central conflict (12 variants)
+- Random plot twist (10 variants)
+- Unique story ID (UUID prefix for maximum variation)
 
-**2. Age-Appropriate Problem-Solving:**
+**2. Theme World-Building (5 pre-defined templates):**
 
-| Age | Strategy Complexity |
-|-----|-------------------|
-| <= 3 | Simple physical actions (push, pull, stack, hug, shout). One thing works. |
-| <= 4 | One-step idea voiced aloud + physical action |
-| <= 5 | Pattern recognition, asking for help, combining two simple ideas |
-| > 5 | Creative planning, explaining to others, two-step strategy |
+| Theme | Setting | Sidekick Ideas |
+|-------|---------|----------------|
+| Dinosaurs | Warm prehistoric valley with giant ferns and sparkly river | Clumsy baby triceratops, chatty pterodactyl, gentle brachiosaurus |
+| Space | Cozy spaceship visiting colorful planets and twinkling stars | Sparkly crystal creature, bouncy jelly-blob alien, kind station keeper |
+| Enchanted Forest | Deep magical forest with glowing mushrooms and mossy paths | Badger in berry-stained apron, copper-feathered owl, woodland mice |
+| Superhero | Friendly neighborhood with park, shops, and rooftops | Flour-dusted baker with courage-cakes, speedy crossing guard |
+| Fairy Tale | Storybook kingdom with wonky castle and cobblestone village | Tiny dragon afraid of fire, fairy godparent always late, jolly king |
 
 **3. Story Mood Guidance (6 moods):**
 
-| Mood | Tone | Emotional Movement | Ending |
-|------|------|-------------------|--------|
-| bedtime-calm | Gentle, quiet, soothing | Slowing pace through story | Eyes closing, warmth, safety |
-| silly-adventure | Playful, giggly, surprising | Absurd escalation | Belly-laugh joy |
-| bravery | Encouraging, empowering | Uncertain -> courageous | Proud |
-| friendship | Warm, kind, connected | Alone -> together | Deep belonging |
-| confidence | Affirming, celebratory | Self-doubt -> self-belief | Pride |
-| curiosity | Wondering, exploratory | Questions -> exploration | Wonder + excitement |
+| Mood | Tone |
+|------|------|
+| bedtime-calm | Gentle, quiet, soothing. End with warmth and safety. |
+| silly-adventure | Playful, giggly, full of surprises and funny sounds. |
+| bravery | Encouraging, empowering. Child discovers they're braver than they thought. |
+| friendship | Warm, kind, connected. Celebrates being there for someone. |
+| confidence | Affirming, celebratory. Child tries something new and succeeds. |
+| curiosity | Wondering, exploratory, delighted by discovery. |
 
-**4. Personalization Rules (6 rules):**
+**4. Personalization Rules:**
 
 | Rule | How Applied |
 |------|------------|
 | Favorite Toy | Appears as magical item, companion, or plot-solving tool |
 | Favorite Things | Colors -> world palette/sidekick trait; Animals -> sidekick species; Foods -> magical items |
-| Interests as Actions | Dinosaurs -> recognizes tracks/speaks dino; Space -> navigates stars/presses buttons; Art -> draws solution alive; Music -> sings/hums/plays rhythm |
-| Pride & Learning | proud_of becomes "superpower"; currently_learning becomes gentle lesson/fear to overcome |
-| Age Shapes Hero | Solution achievable for actual age; emotional moment age-appropriate; strength age-genuine |
-| Nickname & Family Phrase | Nickname used naturally by sidekick; family_phrase inspires the recurring 5-8 word refrain |
+| Interests as Actions | Must be ACTIVE in the plot (child DOES things related to them) |
+| Pride & Learning | proud_of becomes HOW they solve the problem |
+| Sidekick | Memorable name (Bramblesnout, Fizzbeak, Crumblewhisk style) |
+| Refrain | Musical 5-8 word phrase appearing on at least 3 pages |
 
-### Output JSON Schema
+### Output JSON Schema (Combined -- Story Text + Illustration Prompts)
 
 ```json
 {
-  "title": "Short catchy title",
-  "main_character": {
-    "name": "child's name",
-    "personality": ["trait1", "trait2", "trait3"],
-    "child_specific_details": ["moment1", "moment2", "moment3"],
-    "age_appropriate_strength": "description"
-  },
-  "sidekick": {
-    "name": "creative name (Bramblesnout, Fizzbeak, etc.)",
-    "species_or_type": "type",
-    "appearance": ["detail1", "detail2", "detail3", "detail4"],
-    "personality_trait": "description",
-    "voice": "speech pattern",
-    "catchphrase": "short phrase"
-  },
-  "story_world": {
-    "setting": { "named_place": "location", "landmarks": ["x", "y", "z"] },
-    "magical_object": "description (inspired by toy/thing)",
-    "sensory_details": { "smell": "...", "sound": "...", "texture": "..." },
-    "rules": "one magical/special rule"
-  },
-  "emotional_core": {
-    "child_strength": "action using interest as verb",
-    "small_fear": "relatable uncertainty (not phobia)",
-    "recurring_phrase": "5-8 word musical phrase",
-    "emotional_arc": { "starting": "emotion", "mid": "emotion", "ending": "emotion" }
-  },
-  "page_outline": [
-    { "beat": "WONDER", "one_line": "..." },
-    { "beat": "DELIGHT", "one_line": "..." },
-    { "beat": "EMPATHY", "one_line": "..." },
-    { "beat": "EXCITEMENT", "one_line": "..." },
-    { "beat": "TEAMWORK", "one_line": "..." },
-    { "beat": "TENSION", "one_line": "..." },
-    { "beat": "TRIUMPH", "one_line": "..." },
-    { "beat": "WARMTH", "one_line": "..." }
-  ],
-  "illustration_notes": {
-    "child_depiction": "visual details from photo analysis",
-    "child_visual_in_story": "how to lightly weave appearance (1-2 moments)",
-    "sidekick_visual": "exact repeated visual description",
-    "color_palette": ["color1", "color2", "color3", "color4"],
-    "lighting_mood": "warm golden / soft morning / etc."
-  }
+  "title": "A catchy title a 4-year-old would love",
+  "pages": [
+    {
+      "page_number": 1,
+      "text": "Story text for this page...",
+      "illustration_prompt": "Short scene description for image generator (max 25 words)..."
+    },
+    ... (8 pages total)
+  ]
 }
 ```
 
 ---
 
-## Step 2: Story Text Writing
+## Step 2: Reading-Level Validation + Targeted Rewrite (Non-Fatal)
 
-**Purpose:** Write the complete 8-page story text following the Story Bible exactly, enforcing strict reading-level constraints.
-
-**API Configuration:**
-| Parameter | Value |
-|-----------|-------|
-| Model | gpt-4o |
-| Temperature | 0.7 |
-| Max Tokens | 3000 |
-| Input | StoryRequest + Story Bible JSON + Reading Level block |
+**Purpose:** Automated local validation (no API) to catch reading-level violations, followed by targeted AI rewrite of only the failing pages. Only triggers a second API call if pages fail validation.
 
 ### Reading Level Specifications
 
@@ -221,38 +179,7 @@ PIPELINE STEPS:
 }
 ```
 
----
-
-## Step 2b: Editorial Review (Non-Fatal)
-
-**Purpose:** Professional editing pass against 8 strict quality criteria.
-
-**API Configuration:**
-| Parameter | Value |
-|-----------|-------|
-| Model | gpt-4o |
-| Temperature | 0.4 (conservative) |
-| Max Tokens | 3000 |
-| Input | StoryRequest + Story Bible + Draft Pages |
-
-### 8 Review Criteria
-
-1. **Reading Level Enforcement** - All constraints from level config verified
-2. **Emotional Arc** - WONDER -> DELIGHT -> EMPATHY -> EXCITEMENT -> TEAMWORK -> TENSION -> TRIUMPH -> WARMTH; tension must be mild "can I do this?" uncertainty
-3. **Repetition & Refrain** - Musical phrase appearing required number of times as anticipated drumbeat
-4. **Read-Aloud Rhythm** - Alliteration, assonance, varied cadence, one onomatopoeia per page
-5. **Safety** - No violence, peril, death, abandonment, bullying, exclusion, anxiety triggers
-6. **No Generic Filler** - Every sentence specific to THIS child's story; if not serving plot/emotion, replace
-7. **Child Personalization** - Interests ACTIVE, toy present, nickname used, pride connected, family phrase inspiring refrain
-8. **Page-to-Page Consistency** - Names, personality, objects, setting, mood maintained throughout
-
-**Error Handling:** On any failure (parse error, malformed response, different page count), original draft text is preserved unchanged.
-
----
-
-## Step 2c: Reading-Level Validation (Non-Fatal)
-
-**Purpose:** Automated local validation (no API) to catch reading-level violations, followed by targeted AI rewrite of only the failing pages.
+**Note:** The editorial review step (previously Step 2b -- an 8-criterion quality pass) was consolidated into the main generation prompt to reduce API calls. The quality criteria are now embedded in the combined prompt's writing constraints.
 
 ### Local Validation Engine
 
@@ -295,62 +222,15 @@ unfortunately, immediately, particularly
 
 **Output:** `{ "rewritten_pages": [{ "page_number": N, "text": "..." }] }` (only failed pages)
 
----
+**Note:** Character sheet generation (previously Step 3a) and separate illustration prompt generation (previously Step 3b) were consolidated into the combined Step 1 call. The `childVisualDetails` from photo analysis is now used directly as the character reference. Illustration prompts are generated inline with the story text.
 
-## Step 3a: Character Sheet Generation (Non-Fatal)
+### Style-Specific Rendering (Applied at Image Generation Time)
 
-**Purpose:** Create a visual reference ensuring the child character looks consistent across all 8 illustrations.
-
-**API Configuration:**
-| Parameter | Value |
-|-----------|-------|
-| Model | gpt-4o |
-| Temperature | 0.4 |
-| Max Tokens | 2000 |
-| Input | childVisualDetails + illustration_style + Story Bible |
-
-**Output Fields:**
-- Hair (style, color, length, accessories)
-- Outfit (clothing items, colors, patterns)
-- Shoes and accessories
-- Body type/proportions (age-appropriate)
-- Expression range (matched to story mood)
-- Art style rendering (how to draw in selected style)
-- Consistent elements (what must NEVER change between pages)
-
-**Fallback:** If generation fails, uses raw `childVisualDetails` from photo analysis.
-
----
-
-## Step 3b: Illustration Prompt Generation
-
-**Purpose:** Generate precise, style-specific art direction for each page.
-
-**API Configuration:**
-| Parameter | Value |
-|-----------|-------|
-| Model | gpt-4o |
-| Temperature | 0.7 |
-| Max Tokens | 4000 |
-| Input | Story Bible + Final Pages + Style + Character Sheet |
-
-### Style-Specific Directives
-
-| Style | Prompt Prefix | Key Traits | Negatives |
-|-------|--------------|-----------|-----------|
-| Cartoon | "Bright 2D cartoon illustration for a preschool storybook." | Rounded shapes, bold clean outlines, expressive eyes, saturated colors, simple backgrounds, funny energetic poses | No painterly texture, no realistic lighting, no 3D, no text |
-| Storybook | "Soft hand-painted children's storybook illustration." | Warm gentle lighting, watercolor/gouache texture, soft strokes, cozy details, emotional expression, classic composition | No bold outlines, no 3D, no text, no distorted faces |
-| Watercolor | "Delicate watercolor painting for a children's picture book." | Transparent washes, gentle bleeds, white paper showing, dreamy pastels, soft undefined edges, luminous, quiet graceful poses | No bold outlines, no saturated flat colors, no hard edges, no 3D, no text |
-
-### Style Avoidance Lists
-
-| Style | Must Avoid |
-|-------|-----------|
-| Cartoon | painterly textures, realistic lighting, 3D plastic look, text, watercolor washes, soft blended edges, muted earthy tones, complex shadows |
-| Storybook | bold cartoon outlines, 3D plastic look, text, flat color fills, exaggerated proportions, neon colors, sticker-like graphics, hard geometric shapes |
-| Watercolor | bold outlines, saturated flat colors, hard edges, complex detail, dark shadows, geometric shapes, 3D rendering, text |
-
-**Output:** `{ "illustration_prompts": [{ "page_number": N, "illustration_prompt": "Single sentence..." }] }`
+| Style | Shorthand Applied to fal.ai Prompts |
+|-------|--------------------------------------|
+| Cartoon | "bold cartoon with thick outlines, flat vivid colors, big expressive eyes" |
+| Storybook | "warm painterly storybook illustration with soft brushstrokes and golden lighting" |
+| Watercolor | "gentle watercolor with soft washes, pastel colors, and white paper showing through" |
 
 ---
 
@@ -431,45 +311,7 @@ const results = await Promise.allSettled(
 // rejected -> use fallbackImages[i % fallbackImages.length]
 ```
 
----
-
-## Step 4b: Quality Check (Per Image)
-
-**Purpose:** Verify each illustration meets quality and consistency standards before accepting.
-
-**API Configuration:**
-| Parameter | Value |
-|-----------|-------|
-| Model | gpt-4o (vision) |
-| Temperature | 0.2 (strict/deterministic) |
-| Max Tokens | 500 |
-| Input | Generated image URL + evaluation criteria |
-
-### 10-Point Quality Criteria
-
-| # | Category | Rejection Condition |
-|---|----------|-------------------|
-| 1 | IDENTITY | Child looks like a different person (wrong hair/outfit/age) |
-| 2 | FACE | Distorted, asymmetric, uncanny valley effect |
-| 3 | AGE | Child appears older than 7 |
-| 4 | HANDS | Malformed, extra/missing fingers |
-| 5 | TEXT | Any text, letters, words, watermarks visible |
-| 6 | BLUR | Blurry, low-resolution, unfocused areas |
-| 7 | STYLE MATCH | Style doesn't match expected (cartoon/storybook/watercolor) |
-| 8 | STYLE CONFUSION | Cartoon looks painted OR Storybook looks flat |
-| 9 | EMOTION | Page emotion doesn't match expected beat |
-| 10 | CONSISTENCY | Outfit/hairstyle dramatically changed from character sheet |
-
-### Retry Logic
-
-```
-attempt 0: generate -> quality check -> pass: done / fail: retry
-attempt 1: generate -> quality check -> pass: done / fail: retry
-attempt 2: generate -> return immediately (skip check, guaranteed output)
-```
-
-**Max per page:** 3 generations, 2 quality checks
-**Max per story (worst case):** 24 generations, 16 quality checks
+**Note:** Quality checks (previously Step 4b -- GPT-4o Vision reviewing each generated image) have been removed from the production pipeline to reduce API calls and stay within rate limits. The fal.ai Flux Pro Kontext/Max model produces sufficiently consistent results without per-image QA. If quality issues are observed, this step can be re-enabled when the OpenAI account rate limit is increased.
 
 ---
 
@@ -499,53 +341,47 @@ Any unhandled exception during `generateWithAI()` causes the entire pipeline to 
 
 ## Token Budget & Cost Analysis
 
-### Per-Story Token Usage (All Steps)
+### Per-Story Token Usage (Consolidated Pipeline)
 
 | Step | Input Tokens (est.) | Output Tokens | Cost (GPT-4o) |
 |------|-------------------|---------------|---------------|
 | Photo Analysis | ~500 + image | ~100 | ~$0.01 |
-| Story Bible | ~3,000 | ~2,000 | ~$0.04 |
-| Story Writing | ~4,000 | ~2,000 | ~$0.05 |
-| Editorial Review | ~5,000 | ~2,000 | ~$0.06 |
-| Targeted Rewrite | ~4,000 | ~1,000 | ~$0.04 |
-| Character Sheet | ~2,000 | ~800 | ~$0.02 |
-| Illustration Prompts | ~4,000 | ~2,000 | ~$0.05 |
-| Quality Checks (8x) | ~500 + img x8 | ~200 x8 | ~$0.08 |
-| **Total OpenAI** | **~27,000** | **~12,000** | **~$0.35** |
+| Combined Story Generation | ~2,000 | ~3,000 | ~$0.06 |
+| Validation Rewrite (conditional) | ~3,000 | ~1,000 | ~$0.03 |
+| **Total OpenAI (typical)** | **~2,500** | **~3,100** | **~$0.07** |
+| **Total OpenAI (with fix)** | **~5,500** | **~4,100** | **~$0.10** |
 
 ### fal.ai Cost Per Story
 
 | Scenario | Images Generated | Estimated Cost |
 |----------|-----------------|---------------|
 | All pass first try | 8 | ~$0.40 |
-| 50% need 1 retry | 12 | ~$0.60 |
-| Worst case (all max retry) | 24 | ~$1.20 |
-| **Typical** | **10** | **~$0.50** |
+| **Typical** | **8** | **~$0.40** |
 
 ### Total Cost Per Story
 
 | Scenario | OpenAI | fal.ai | Total |
 |----------|--------|--------|-------|
-| Best case | $0.27 | $0.40 | **$0.67** |
-| Typical | $0.35 | $0.50 | **$0.85** |
-| Worst case | $0.35 | $1.20 | **$1.55** |
+| Best case (no photo, validation passes) | $0.06 | $0.40 | **$0.46** |
+| Typical (photo + no rewrite needed) | $0.07 | $0.40 | **$0.47** |
+| Worst case (photo + validation rewrite) | $0.10 | $0.40 | **$0.50** |
+
+**Note:** Costs reduced ~70% from v2.0 by consolidating 6 API calls into 1-2.
 
 ---
 
 ## Timing Analysis
 
-### Sequential Phase (Story Text): 25-50 seconds
+### Sequential Phase (Story Text): 5-50 seconds
 
 | Step | Duration | Notes |
 |------|----------|-------|
-| Photo Analysis | 2-4s | Single image, low detail |
-| Story Bible | 5-10s | Large output (4096 tokens) |
-| Story Writing | 5-8s | Medium output |
-| Editorial Review | 5-8s | Lower temperature, analysis-heavy |
-| Validation | <100ms | Local computation, no API |
-| Targeted Rewrite | 4-6s | Only if pages fail (conditional) |
-| Character Sheet | 3-5s | Small output |
-| Illustration Prompts | 5-8s | Medium output |
+| Photo Analysis | 2-4s | Single image, low detail (skipped if no photo) |
+| Rate limit wait (if 429) | 0-21s | Only if recent API call used the slot |
+| Combined Story Generation | 5-10s | Full story + illustration prompts in one call |
+| Local Validation | <100ms | No API call |
+| Rate limit wait (if needed) | 0-21s | Only if rewrite is required |
+| Targeted Rewrite | 4-6s | Only if pages fail validation (conditional) |
 
 ### Parallel Phase (Illustrations): 20-60 seconds
 
@@ -553,17 +389,16 @@ Any unhandled exception during `generateWithAI()` causes the entire pipeline to 
 |------|----------|-------|
 | fal.ai queue wait | 5-15s | Variable by load |
 | fal.ai generation | 10-30s | Per image |
-| Quality check | 3-5s | Per image |
-| Retry (if needed) | +15-35s | Per failed image |
-| **Limited by slowest** | **20-60s** | |
+| **Limited by slowest** | **20-60s** | All 8 submitted simultaneously |
 
 ### End-to-End Summary
 
 | Scenario | Duration |
 |----------|----------|
-| Best case | ~45 seconds |
-| Typical | ~60-90 seconds |
-| Worst case (retries + slow queue) | ~120-180 seconds |
+| Best case (no photo, validation passes, fast fal.ai) | ~30 seconds |
+| Typical (photo + no rewrite + normal fal.ai) | ~45-60 seconds |
+| With rate limit waits | ~60-90 seconds |
+| Worst case (rate limit retries + slow fal.ai queue) | ~120-180 seconds |
 
 ---
 
@@ -571,18 +406,24 @@ Any unhandled exception during `generateWithAI()` causes the entire pipeline to 
 
 | Step | Error Type | Behavior | User Impact |
 |------|-----------|----------|-------------|
-| Photo Analysis | API error / timeout | Silent catch, default "no details" | Illustrations less personalized |
-| Story Bible | JSON parse fail | Log warning, use raw text | Downstream quality may degrade |
-| Story Bible | API error | **FATAL** - throws | Triggers fallback story |
-| Story Writing | Any error | **FATAL** - throws | Triggers fallback story |
-| Editorial Review | Any error | Non-fatal, skip | Unedited text (still good) |
-| Validation/Rewrite | Any error | Non-fatal, skip | May have level violations |
-| Character Sheet | Any error | Use photo details fallback | Less consistent illustrations |
-| Illustration Prompts | Any error | **FATAL** - throws | Triggers fallback story |
+| Photo Analysis | API error / timeout / 429 after retries | Silent catch, default "no details" | Illustrations less personalized |
+| Combined Story Gen | 429 rate limit | Retry up to 5x with 21s+ backoff | Adds 21-105s to generation time |
+| Combined Story Gen | Non-429 API error | **FATAL** - throws | Triggers fallback story |
+| Combined Story Gen | JSON parse fail | **FATAL** - throws | Triggers fallback story |
+| Validation/Rewrite | Any error | Non-fatal, skip | May have minor level violations |
+| Validation/Rewrite | 429 after retries | Non-fatal, skip | Story text unchanged (still good) |
 | Image Generation | Timeout (120s) | Use fallback image for that page | Stock photo for 1 page |
 | Image Generation | API error | Use fallback image for that page | Stock photo for 1 page |
-| Quality Check | API error | Auto-pass (accept image) | May accept lower quality |
 | DB Insert | Any error | Return 500, story stuck "generating" | User sees infinite loading |
+
+### Rate Limit Retry Behavior
+
+```
+429 Response -> Parse retry-after header (or default 21s)
+             -> Wait (attempt + 1) * 21s
+             -> Retry (max 5 attempts)
+             -> After 5 failures: throw (triggers fallback for fatal steps)
+```
 
 ---
 
@@ -618,29 +459,35 @@ Any unhandled exception during `generateWithAI()` causes the entire pipeline to 
 
 ---
 
-## Optimization Opportunities
+## Optimization History
 
-### Short-term (No architecture changes)
+### Completed (v3.0)
 
-1. Use **gpt-4o-mini** for editorial review and validation rewrite (same quality, 10x cheaper, 2x faster)
-2. Skip editorial review for beginner level (simpler text needs less editing)
-3. Reduce quality check retries to **1** (diminishing returns on 3rd attempt)
-4. Cache Story Bibles for same child+theme combinations
+1. **Consolidated 6 API calls into 1-2** -- Reduced from story bible + story text + editorial review + validation rewrite + character sheet + illustration prompts to a single combined call + conditional validation fix
+2. **Added 429 retry with backoff** -- 5 retries with 21s+ exponential wait handles 3 RPM limit
+3. **Removed per-image quality checks** -- Eliminated 8 additional GPT-4o Vision calls per story
+4. **Cost reduction ~70%** -- From ~$0.35 to ~$0.07-0.10 per story (OpenAI portion)
 
-### Medium-term
+### Remaining Opportunities
+
+#### Short-term (No architecture changes)
+
+1. **Upgrade OpenAI tier** -- Increasing from 3 RPM eliminates all rate limit waits and would allow re-enabling the multi-step pipeline for higher quality
+2. **Cache validated stories** -- Skip validation rewrite for repeat theme+level combinations
+3. **Progressive page display** -- Show each page as it completes instead of all-at-once
+
+#### Medium-term
 
 1. **Streaming responses** -- Stream story text to show real-time progress
-2. **Progressive page display** -- Show each page as it completes instead of all-at-once
-3. **Batch fal.ai submission** -- Submit all 8 simultaneously with webhook callbacks
-4. Use **Supabase Realtime** instead of polling for completion notification
+2. Use **Supabase Realtime** instead of polling for completion notification
+3. **Re-enable editorial review** -- Once rate limits allow, add back the quality pass as a separate call
 
-### Long-term
+#### Long-term
 
 1. **Fine-tuned story model** -- Custom model trained on children's literature corpus
 2. **LoRA per child** -- Persistent adapters for returning users
 3. **Evaluation pipeline** -- Automated scoring against quality rubric
 4. **A/B testing** -- Systematic prompt improvement with engagement metrics
-5. **Pre-generated Story Bibles** -- Popular combinations pre-cached
 
 ---
 

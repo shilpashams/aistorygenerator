@@ -105,7 +105,7 @@ These must be configured via the Supabase dashboard (Project Settings > Edge Fun
 
 | Secret | Purpose |
 |--------|---------|
-| `OPENAI_API_KEY` | OpenAI API access for GPT-4o-mini |
+| `OPENAI_API_KEY` | OpenAI API access for GPT-4o |
 | `FAL_KEY` | fal.ai API access for Flux Pro Kontext |
 
 ---

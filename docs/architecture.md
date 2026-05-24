@@ -2,7 +2,7 @@
 
 ## System Identity
 
-**Adventures Of** is a personalized children's storybook generator. Parents upload 1-3 photos of their child, provide age/interests/preferences through a guided wizard, and the system produces a 10-page illustrated storybook where the child is the protagonist -- rendered in a chosen art style with AI-generated narrative and illustrations that preserve the child's facial likeness.
+**Adventures Of** is a personalized children's storybook generator. Parents upload 1-3 photos of their child, provide age/interests/preferences through a guided wizard, and the system produces an 8-page illustrated storybook where the child is the protagonist -- rendered in a chosen art style with AI-generated narrative and illustrations that preserve the child's facial likeness.
 
 The system is architected as a **stateless SPA** backed by **Supabase** (managed Postgres + Edge Functions + Storage), with **OpenAI** for narrative generation and **fal.ai** for illustration synthesis.
 
@@ -20,7 +20,7 @@ The system is architected as a **stateless SPA** backed by **Supabase** (managed
 | Database | Supabase PostgreSQL | Managed Postgres with RLS, realtime, storage in one platform |
 | Serverless | Supabase Edge Functions (Deno) | Co-located with DB, zero cold-start penalty for auth bypass |
 | Object Storage | Supabase Storage | Integrated auth policies, public URL generation |
-| Text AI | OpenAI GPT-4o-mini | Cost-optimized ($0.002/story), JSON-mode capable |
+| Text AI | OpenAI GPT-4o | Consolidated single-call approach (~$0.07/story), JSON-mode capable, higher creative quality |
 | Image AI | fal.ai Flux Pro Kontext | Face-preserving style transfer, queue-based async |
 | Fallback Images | Pexels | Royalty-free, no API key required for hotlinking |
 
@@ -54,7 +54,7 @@ The system is architected as a **stateless SPA** backed by **Supabase** (managed
                                           ▼                   ▼          │
                                    ┌────────────┐    ┌─────────────┐    │
                                    │   OpenAI   │    │   fal.ai    │    │
-                                   │ GPT-4o-mini│    │ Flux Kontext│    │
+                                   │   GPT-4o   │    │ Flux Kontext│    │
                                    │ (narrative)│    │ (illust.)   │    │
                                    └────────────┘    └─────────────┘    │
                                                               │          │
@@ -152,9 +152,9 @@ fal.ai  → theme-mapped Pexels stock photos (per-page granularity)
 
 **Tradeoff**: Fallback stories are generic and not truly personalized. Stock photos don't show the child.
 
-**Why**: The #1 UX failure mode is "I waited 2 minutes and got nothing." A mediocre story is infinitely better than an error screen for a parent who just uploaded their child's photos. The fallback stories are still themed, use the child's name, and provide a complete 10-page reading experience.
+**Why**: The #1 UX failure mode is "I waited 2 minutes and got nothing." A mediocre story is infinitely better than an error screen for a parent who just uploaded their child's photos. The fallback stories are still themed, use the child's name, and provide a complete 8-page reading experience.
 
-**Per-Page Granularity**: Illustration fallback is applied per-page, not all-or-nothing. If fal.ai succeeds for 7/10 pages and fails for 3, only those 3 get stock photos. This maximizes personalization.
+**Per-Page Granularity**: Illustration fallback is applied per-page, not all-or-nothing. If fal.ai succeeds for 7/8 pages and fails for 1, only that 1 gets a stock photo. This maximizes personalization.
 
 ### 4. Wizard Context (In-Memory Only)
 
@@ -179,11 +179,11 @@ fal.ai  → theme-mapped Pexels stock photos (per-page granularity)
 
 ### 6. 10-Page Stories with Prescribed Arc Structure
 
-**Decision**: Stories are exactly 10 pages following a rigid structure (2 intro, 2 allies, 2 journey, 2 challenge, 2 resolution).
+**Decision**: Stories are exactly 8 pages following a rigid emotional arc (WONDER, DELIGHT, EMPATHY, EXCITEMENT, TEAMWORK, TENSION, TRIUMPH, WARMTH).
 
 **Tradeoff**: Less creative freedom for the AI vs. consistent narrative quality.
 
-**Why**: Without structure, GPT-4o-mini produces stories that rush through events (everything happens in pages 1-3, then pages 4-10 are filler) or meander without resolution. The prescribed arc ensures every story has proper pacing: characters are introduced before they're needed, tension builds before it resolves, and the ending feels earned. This is the single most impactful quality improvement over "just write a 10-page story."
+**Why**: Without structure, GPT produces stories that rush through events or meander without resolution. The prescribed 8-beat arc ensures every story has proper pacing: characters are introduced before they're needed, tension builds before it resolves, and the ending feels earned. This is the single most impactful quality improvement over "just write a story."
 
 ### 7. Single Edge Function (Not Microservices)
 
@@ -218,7 +218,7 @@ t=1s    Edge Function receives request
         ├── UPDATE stories SET status='generating'
         └── POST to OpenAI (story text generation)
 
-t=5s    OpenAI returns JSON (title + 10 pages with text + illustration_prompts)
+t=5-30s OpenAI returns JSON (title + 8 pages with text + illustration_prompts; may include rate limit waits)
         ├── UPDATE stories SET title=$1
         └── Launch 10 parallel fal.ai requests (one per page illustration)
 
@@ -324,7 +324,7 @@ t=33s   StoryReader fetches story + story_pages
 
 | Resource | Per Story | Monthly (1K stories) |
 |----------|-----------|---------------------|
-| OpenAI GPT-4o-mini (6K tokens out) | ~$0.003 | $3 |
+| OpenAI GPT-4o (4K tokens out) | ~$0.07 | $70 |
 | fal.ai Flux Kontext (10 images) | ~$0.20 | $200 |
 | Supabase (Pro plan) | included | $25 |
 | Storage (3 photos x 3MB) | negligible | <$1 |

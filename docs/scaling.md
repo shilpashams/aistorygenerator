@@ -10,13 +10,13 @@ The architecture is designed for **demo/early-stage usage** (single-digit concur
 
 | Resource | Amount | Notes |
 |----------|--------|-------|
-| Database rows | 12 | 1 profile + 1 story + 10 pages |
+| Database rows | 10 | 1 profile + 1 story + 8 pages |
 | Database storage | ~5 KB | Text content + metadata |
 | Object storage | 3-9 MB | 1-3 uploaded photos |
-| Edge function time | 30-120s | Dominated by fal.ai queue |
-| OpenAI tokens | ~8K | ~2K prompt + ~6K completion |
-| fal.ai images | 10 | One per page, 4:3 JPEG |
-| Client HTTP requests | ~20-35 | Uploads + inserts + polling |
+| Edge function time | 30-120s | Dominated by fal.ai queue + rate limit waits |
+| OpenAI tokens | ~5K | ~2K prompt + ~3K completion (1-2 API calls) |
+| fal.ai images | 8 | One per page, 4:3 JPEG |
+| Client HTTP requests | ~15-25 | Uploads + inserts + polling |
 
 ---
 
@@ -127,11 +127,11 @@ The architecture is designed for **demo/early-stage usage** (single-digit concur
 
 | Component | Cost | % of Total |
 |-----------|------|-----------|
-| OpenAI GPT-4o-mini | $0.003 | 1.5% |
-| fal.ai (10 images) | $0.20 | 97% |
+| OpenAI GPT-4o (1-2 calls) | $0.07 | 15% |
+| fal.ai (8 images) | $0.40 | 83% |
 | Supabase compute | ~$0.001 | 0.5% |
 | Storage (3 photos) | ~$0.001 | 0.5% |
-| **Total** | **~$0.205** | 100% |
+| **Total** | **~$0.47** | 100% |
 
 ### Monthly Projections
 
@@ -170,9 +170,9 @@ The architecture is designed for **demo/early-stage usage** (single-digit concur
 | Optimization | Current | Proposed | Impact |
 |-------------|---------|----------|--------|
 | Text generation | Wait for full response | Stream JSON tokens | Could display title immediately |
-| Illustration generation | Wait for all 10 | Progressive delivery (show pages as ready) | Better perceived performance |
-| fal.ai queue | Poll every 3s | Use webhooks | Eliminate polling overhead |
-| Database writes | Insert all 10 pages atomically | Insert pages as they complete | Earlier partial reads possible |
+| Illustration generation | Wait for all 8 | Progressive delivery (show pages as ready) | Better perceived performance |
+| fal.ai queue | Poll every 2s | Use webhooks | Eliminate polling overhead |
+| Database writes | Insert all 8 pages atomically | Insert pages as they complete | Earlier partial reads possible |
 
 ### Database
 
@@ -237,5 +237,5 @@ Each phase is triggered by concrete signals (error rates, cost thresholds, laten
 
 - Fallback story + Pexels images
 - Story generation completes in <5 seconds
-- User gets a readable 10-page story (just not personalized beyond name)
+- User gets a readable 8-page story (just not personalized beyond name)
 - This is the worst-case scenario and it still delivers a usable product

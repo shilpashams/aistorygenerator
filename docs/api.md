@@ -32,12 +32,18 @@ interface StoryRequest {
   name: string;               // Child's first name
   age: number;                // Child's age (2-12)
   interests: string[];        // 1-5 interest strings
-  favorite_things: string;    // Free-text (may be empty)
+  favorite_things: string;    // Free-text (color, animal, food -- may be empty)
   themes_to_avoid: string;    // Free-text exclusions (may be empty)
-  reading_level: string;      // "beginner" | "intermediate" | "advanced"
+  reading_level: string;      // "beginner" | "intermediate"
   theme: string;              // "dinosaurs" | "space" | "enchanted-forest" | "superhero" | "fairy-tale"
-  illustration_style: string; // "cartoon" | "storybook" | "digital-art"
+  illustration_style: string; // "cartoon" | "storybook" | "watercolor"
   photo_urls: string[];       // 1-3 public URLs to uploaded child photos
+  favorite_toy: string;       // Child's favorite toy or comfort object
+  nickname: string;           // Child's nickname
+  proud_of: string;           // Something the child is proud of
+  currently_learning: string; // Something the child is currently learning
+  story_mood: string;         // "bedtime-calm" | "silly-adventure" | "bravery" | "friendship" | "confidence" | "curiosity"
+  family_phrase: string;      // A family saying or phrase
 }
 ```
 
@@ -46,7 +52,8 @@ interface StoryRequest {
 {
   "success": true,
   "story_id": "uuid",
-  "title": "The Generated Story Title"
+  "title": "The Generated Story Title",
+  "ai_error": null  // or error string if fallback was used
 }
 ```
 
@@ -60,16 +67,18 @@ interface StoryRequest {
 **Side Effects (database mutations)**:
 1. `UPDATE stories SET status = 'generating' WHERE id = $story_id`
 2. `UPDATE stories SET title = $title WHERE id = $story_id`
-3. `INSERT INTO story_pages (story_id, page_number, text_content, illustration_url)` -- 10 rows
-4. `UPDATE stories SET status = 'complete', page_count = 10 WHERE id = $story_id`
+3. `INSERT INTO story_pages (story_id, page_number, text_content, illustration_url)` -- 8 rows
+4. `UPDATE stories SET status = 'complete', page_count = 8 WHERE id = $story_id`
 
 If generation fails after step 1, the story remains in `generating` status indefinitely. There is no automatic timeout or retry mechanism.
 
+**Rate Limit Behavior**: The OpenAI account has a 3 RPM limit. The function retries 429 errors up to 5 times with 21s+ backoff. This can extend execution time significantly but ensures generation eventually succeeds.
+
 **Execution Timeline**:
 - t+0s: Status set to `generating`
-- t+3-8s: OpenAI text generation completes (or fallback used)
-- t+8-45s: 10 fal.ai illustration requests complete in parallel
-- t+45-50s: Database writes complete, status set to `complete`
+- t+5-30s: OpenAI text generation completes (includes potential rate limit waits)
+- t+30-90s: 8 fal.ai illustration requests complete in parallel
+- t+90-95s: Database writes complete, status set to `complete`
 
 ---
 
@@ -200,20 +209,22 @@ const { data: pages } = await supabase
 
 **Endpoint**: `POST https://api.openai.com/v1/chat/completions`
 
-**Model**: `gpt-4o-mini`
+**Model**: `gpt-4o`
 
 **Parameters**:
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
 | temperature | 0.85 | Balances creativity with coherence |
-| max_tokens | 6000 | Sufficient for 10 pages + JSON structure |
-| messages | system + user | System sets author role; user contains full prompt |
+| max_tokens | 4096 | Sufficient for 8 pages + illustration prompts + JSON structure |
+| response_format | json_object | Enforces valid JSON output |
+| messages | system + user | System sets author role; user contains full combined prompt |
 
 **Output**: Raw JSON string (no markdown fences). Parsed into `GeneratedStory` interface.
 
-**Failure Modes**: 
-- 429 (rate limit): Not retried, falls back immediately
-- 500/503 (service unavailable): Falls back to template
+**Rate Limit Handling** (3 RPM on current tier):
+- 429 (rate limit): Retried up to 5 times with 21s+ exponential backoff
+- After 5 retries: Falls back to template
+- 500/503 (service unavailable): Falls back to template immediately
 - Invalid JSON in response: Falls back to template
 
 ### fal.ai Flux Pro Kontext
@@ -238,7 +249,7 @@ const { data: pages } = await supabase
 3. On status `COMPLETED`: GET `response_url` for `{ images: [{ url }] }`
 4. On status `FAILED` or 40 polls (2 min timeout): Use Pexels fallback
 
-**Concurrency**: All 10 page illustrations are submitted simultaneously via `Promise.allSettled()`. fal.ai handles queuing internally.
+**Concurrency**: All 8 page illustrations are submitted simultaneously via `Promise.allSettled()`. fal.ai handles queuing internally.
 
 ---
 
@@ -264,7 +275,7 @@ const { data: pages } = await supabase
 
 | Variable | Exposure | Purpose |
 |----------|----------|---------|
-| `OPENAI_API_KEY` | Server only | GPT-4o-mini access |
+| `OPENAI_API_KEY` | Server only | GPT-4o access |
 | `FAL_KEY` | Server only | fal.ai Flux Pro access |
 
 ---

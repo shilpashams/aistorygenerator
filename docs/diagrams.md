@@ -17,7 +17,7 @@
 ┌──────────────────┐    ┌──────────────────┐
 │ Story Generating │───▶│  Story Reader    │
 │                  │    │                  │
-│ • Upload photos  │    │ • 10-page story  │
+│ • Upload photos  │    │ • 8-page story   │
 │ • Create profile │    │ • Navigation     │
 │ • Trigger AI     │    │ • Illustrations  │
 │ • Poll status    │    │                  │
@@ -238,7 +238,7 @@ REQUEST arrives with headers:
                     ▼                             ▼
          ┌──────────────────┐         ┌──────────────────┐
          │ AI-Generated     │         │ Hardcoded         │
-         │ Story (10 pages) │         │ Fallback Story    │
+         │ Story (8 pages)  │         │ Fallback Story    │
          │ + custom prompts │         │ (themed template) │
          └────────┬─────────┘         └────────┬─────────┘
                   │                             │
@@ -390,7 +390,7 @@ REQUEST arrives with headers:
 │  │    └─────────────────┘ └─────────────────┘ └─────────────────┘   │   │
 │  └───────────────────────────────────────────────────────────────────┘   │
 │  ┌───────────────────────────────────────────────────────────────────┐   │
-│  │ 5. PAGE STRUCTURE (10 pages)                                       │   │
+│  │ 5. PAGE STRUCTURE (8 pages)                                        │   │
 │  │    1-2: Introduction + inciting incident                           │   │
 │  │    3-4: Meet 2-3 named allies                                      │   │
 │  │    5-6: Journey + small obstacle                                   │   │
