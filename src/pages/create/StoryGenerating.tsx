@@ -154,6 +154,20 @@ export function StoryGenerating() {
         } else if (storyData?.status === 'failed') {
           if (pollInterval) clearInterval(pollInterval);
           navigate(`/create/story/${storyId}`);
+        } else if (storyData?.status === 'generating' && pollCount > 15) {
+          // If still generating after 30s, check if pages exist and navigate
+          const { data: pages } = await supabase
+            .from('story_pages')
+            .select('id')
+            .eq('story_id', storyId)
+            .limit(1);
+          if (pages && pages.length > 0) {
+            if (pollInterval) clearInterval(pollInterval);
+            // Mark complete since pages exist
+            await supabase.from('stories').update({ status: 'complete' }).eq('id', storyId);
+            setProgress(100);
+            setTimeout(() => navigate(`/create/story/${storyId}`), 600);
+          }
         }
       }, 2000);
     }

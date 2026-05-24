@@ -1603,10 +1603,15 @@ Deno.serve(async (req: Request) => {
       await supabase.from("story_pages").insert(pageInserts);
     }
 
-    await supabase
+    // Mark story complete immediately after pages are inserted
+    const { error: updateError } = await supabase
       .from("stories")
       .update({ status: "complete", page_count: storyContent.pages.length })
       .eq("id", story_id);
+
+    if (updateError) {
+      console.error("Failed to update story status:", updateError.message);
+    }
 
     return new Response(
       JSON.stringify({ success: true, story_id, title: storyContent.title, ai_error: aiError }),
@@ -1615,6 +1620,33 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error) {
+    // Safety net: try to mark story as complete if pages were already inserted
+    try {
+      const body = await req.clone().json().catch(() => null);
+      if (body?.story_id) {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        const { data: pages } = await supabase
+          .from("story_pages")
+          .select("id")
+          .eq("story_id", body.story_id)
+          .limit(1);
+        if (pages && pages.length > 0) {
+          await supabase
+            .from("stories")
+            .update({ status: "complete" })
+            .eq("id", body.story_id);
+        } else {
+          await supabase
+            .from("stories")
+            .update({ status: "failed" })
+            .eq("id", body.story_id);
+        }
+      }
+    } catch (_) { /* best effort */ }
+
     return new Response(
       JSON.stringify({ error: (error as Error).message }),
       {
