@@ -4,15 +4,11 @@ import { ArrowLeft, ArrowRight, User, Sparkles } from 'lucide-react';
 import { useWizard } from '../../context/WizardContext';
 
 const interestOptions = [
-  'Dinosaurs', 'Space', 'Animals', 'Princesses', 'Superheroes',
-  'Cars & Trucks', 'Ocean & Sea Life', 'Fairies & Magic', 'Sports',
+  'Space', 'Animals', 'Princesses', 'Superheroes',
+  'Cars & Trucks', 'Fairies & Magic', 'Sports',
   'Music', 'Robots', 'Art & Drawing',
 ];
 
-const readingLevels = [
-  { value: 'beginner', label: 'Beginner', desc: 'Ages 3-4, simple words' },
-  { value: 'intermediate', label: 'Intermediate', desc: 'Ages 5-6, short sentences' },
-];
 
 const storyMoodOptions = [
   { value: 'bedtime-calm', label: 'Bedtime Calm', desc: 'Gentle, soothing, wind-down' },
@@ -223,25 +219,9 @@ export function ChildProfile() {
 
         {/* Reading Level */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            Reading Level
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {readingLevels.map(level => (
-              <button
-                key={level.value}
-                onClick={() => updateData({ reading_level: level.value })}
-                className={`p-4 rounded-xl border-2 text-left transition-all duration-200 ${
-                  data.reading_level === level.value
-                    ? 'border-brand-500 bg-brand-50 shadow-md'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <p className="font-semibold text-gray-900">{level.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{level.desc}</p>
-              </button>
-            ))}
-          </div>
+          <p className="text-sm font-semibold text-gray-700">
+            Reading Level — <span className="font-normal text-gray-600">short sentences</span>
+          </p>
         </div>
       </div>
 

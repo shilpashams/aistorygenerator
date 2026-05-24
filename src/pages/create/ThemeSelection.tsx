@@ -4,14 +4,6 @@ import { useWizard } from '../../context/WizardContext';
 
 const themes = [
   {
-    id: 'dinosaurs',
-    label: 'Dinosaur Adventure',
-    emoji: '\uD83E\uDD95',
-    desc: 'Explore the prehistoric world with friendly dinos',
-    color: 'bg-green-50 border-green-200 hover:border-green-400',
-    activeColor: 'bg-green-100 border-green-500',
-  },
-  {
     id: 'superhero',
     label: 'Superhero Quest',
     emoji: '\uD83E\uDDB8',
