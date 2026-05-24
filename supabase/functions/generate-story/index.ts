@@ -1462,6 +1462,39 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
+  // Health-check endpoint: GET request tests OpenAI key validity
+  if (req.method === "GET") {
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) {
+      return new Response(
+        JSON.stringify({ status: "error", message: "OPENAI_API_KEY is not set" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    try {
+      const testResponse = await fetch("https://api.openai.com/v1/models", {
+        headers: { "Authorization": `Bearer ${openaiKey}` },
+      });
+      if (!testResponse.ok) {
+        const errBody = await testResponse.text();
+        return new Response(
+          JSON.stringify({ status: "error", message: `OpenAI returned ${testResponse.status}`, detail: errBody.substring(0, 500) }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return new Response(
+        JSON.stringify({ status: "ok", message: "OpenAI API key is valid" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ status: "error", message: (e as Error).message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -1477,13 +1510,15 @@ Deno.serve(async (req: Request) => {
       .eq("id", story_id);
 
     let storyContent: GeneratedStory;
+    let aiError: string | null = null;
 
     try {
       storyContent = await generateWithAI(body);
       console.log("AI generation SUCCESS: title =", storyContent.title);
-    } catch (aiError) {
-      const errMsg = (aiError as Error).message;
-      const errStack = (aiError as Error).stack || "";
+    } catch (err) {
+      const errMsg = (err as Error).message;
+      const errStack = (err as Error).stack || "";
+      aiError = errMsg;
       console.error("AI generation FAILED:", errMsg);
       console.error("Stack:", errStack);
       console.log("Falling back to pre-written story...");
@@ -1574,7 +1609,7 @@ Deno.serve(async (req: Request) => {
       .eq("id", story_id);
 
     return new Response(
-      JSON.stringify({ success: true, story_id, title: storyContent.title }),
+      JSON.stringify({ success: true, story_id, title: storyContent.title, ai_error: aiError }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
