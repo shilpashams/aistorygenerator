@@ -110,10 +110,15 @@ export function StoryGenerating() {
 
         if (!response.ok) {
           console.error('Edge function error:', response.status, await response.text().catch(() => ''));
+          if (!cancelled) {
+            startPolling(story.id);
+          }
+          return;
         }
 
         if (!cancelled) {
-          startPolling(story.id);
+          setProgress(100);
+          setTimeout(() => navigate(`/create/story/${story.id}`), 600);
         }
       } catch (err) {
         console.error('Story generation error:', err);
@@ -127,7 +132,15 @@ export function StoryGenerating() {
     }
 
     function startPolling(storyId: string) {
+      let pollCount = 0;
       pollInterval = setInterval(async () => {
+        pollCount++;
+        if (pollCount > 90) {
+          if (pollInterval) clearInterval(pollInterval);
+          navigate(`/create/story/${storyId}`);
+          return;
+        }
+
         const { data: storyData } = await supabase
           .from('stories')
           .select('status')

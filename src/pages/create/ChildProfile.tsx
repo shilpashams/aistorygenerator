@@ -220,7 +220,7 @@ export function ChildProfile() {
         {/* Reading Level */}
         <div>
           <p className="text-sm font-semibold text-gray-700">
-            Reading Level — <span className="font-normal text-gray-600">short sentences</span>
+            Reading Level - <span className="font-normal text-gray-600">Short Sentences</span>
           </p>
         </div>
       </div>
