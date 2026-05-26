@@ -10,6 +10,7 @@ import { Testimonials } from './components/Testimonials';
 import { FAQ } from './components/FAQ';
 import { FinalCTA } from './components/FinalCTA';
 import { Footer } from './components/Footer';
+import { Dashboard } from './pages/Dashboard';
 import { WizardLayout } from './pages/create/WizardLayout';
 import { PhotoUpload } from './pages/create/PhotoUpload';
 import { ChildProfile } from './pages/create/ChildProfile';
@@ -42,6 +43,7 @@ function App() {
       <WizardProvider>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create" element={<WizardLayout />}>
             <Route path="photos" element={<PhotoUpload />} />
             <Route path="profile" element={<ChildProfile />} />

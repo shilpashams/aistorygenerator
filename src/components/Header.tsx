@@ -30,6 +30,9 @@ export function Header() {
           </a>
 
           <nav className="hidden md:flex items-center gap-8">
+            <Link to="/dashboard" className="text-sm font-medium text-gray-600 hover:text-brand-600 transition-colors">
+              Dashboard
+            </Link>
             <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-brand-600 transition-colors">
               How It Works
             </a>
@@ -60,6 +63,7 @@ export function Header() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
           <nav className="flex flex-col px-4 py-4 gap-3">
+            <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">Dashboard</Link>
             <a href="#how-it-works" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">How It Works</a>
             <a href="#features" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">Features</a>
             <a href="#faq" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">FAQ</a>
