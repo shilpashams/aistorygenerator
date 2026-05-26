@@ -375,9 +375,8 @@ REQUEST arrives with headers:
 │  └───────────────────────────────────────────────────────────────────┘   │
 │  ┌───────────────────────────────────────────────────────────────────┐   │
 │  │ 3. READING LEVEL                                                   │   │
-│  │    beginner: 3-6 words/sentence, rhythm, repetition               │   │
-│  │    intermediate: simple + compound, expressive dialogue            │   │
-│  │    advanced: paragraphs, metaphors, descriptive                    │   │
+│  │    beginner (3-4): 1-2 sentences/page, 5-9 words, repetition      │   │
+│  │    intermediate (5-7): 2-3 sentences/page, 8-14 words, dialogue   │   │
 │  └───────────────────────────────────────────────────────────────────┘   │
 │  ┌───────────────────────────────────────────────────────────────────┐   │
 │  │ 4. WORLD-BUILDING RULES (theme-specific, ~150 tokens)             │   │

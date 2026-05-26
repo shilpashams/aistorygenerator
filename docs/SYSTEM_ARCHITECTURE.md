@@ -185,7 +185,7 @@ interface WizardData {
   themes_to_avoid: string;
   reading_level: string;          // beginner | intermediate
   theme: string;                  // superhero | fairy-tale
-  illustration_style: string;     // cartoon | storybook | watercolor
+  illustration_style: string;     // cartoon (fixed)
   favorite_toy: string;
   nickname: string;
   proud_of: string;
@@ -333,7 +333,7 @@ On fatal error:
 |--------|------|-------------|---------|-------------|
 | id | uuid | PK | gen_random_uuid() | Unique identifier |
 | name | text | NOT NULL | '' | Child's first name |
-| age | integer | NOT NULL | 5 | Age (2-12) |
+| age | integer | NOT NULL | 5 | Age (3-7) |
 | interests | text[] | NOT NULL | '{}' | Selected interests |
 | favorite_things | text | NOT NULL | '' | Favorites description |
 | themes_to_avoid | text | NOT NULL | '' | Excluded themes |
@@ -355,7 +355,7 @@ On fatal error:
 | child_profile_id | uuid | NOT NULL FK | - | Parent profile |
 | title | text | NOT NULL | '' | Generated title |
 | theme | text | NOT NULL | '' | Selected theme |
-| illustration_style | text | NOT NULL | 'watercolor' | Art style |
+| illustration_style | text | NOT NULL | 'cartoon' | Art style (fixed) |
 | status | text | NOT NULL | 'pending' | Workflow state |
 | page_count | integer | NOT NULL | 0 | Pages in story |
 | created_at | timestamptz | NOT NULL | now() | Creation timestamp |
@@ -528,10 +528,10 @@ On fatal error:
 
 ### Reading Level Specifications
 
-| Parameter | Beginner (3-4) | Intermediate (5-6) |
+| Parameter | Beginner (3-4) | Intermediate (5-7) |
 |-----------|----------------|---------------------|
 | Pages | 8 | 8 |
-| Sentences/page | 1-2 (strict) | 2-4 |
+| Sentences/page | 1-2 (strict) | 2-3 (strict) |
 | Words/sentence | 5-9 (strict) | 8-14 |
 | Vocabulary | Preschool only | Richer but concrete |
 | Refrain | 3-5 words, 4+ times | 5-8 words, 3+ times |
@@ -576,7 +576,7 @@ On fatal error:
 For each of 8 pages (in parallel):
 
 1. Build full prompt:
-   - Style render instructions (cartoon/storybook/watercolor)
+   - Style render instructions (cartoon)
    - "Transform this photo, keep child's face/features/likeness exactly"
    - Scene description from illustration_prompt
    - Theme suffix
@@ -602,29 +602,23 @@ For each of 8 pages (in parallel):
    Final attempt skips quality check to guarantee output
 ```
 
-### Style Differentiation
+### Style Specification
 
 | Style | Render Instructions |
 |-------|-------------------|
 | Cartoon | Thick black outlines, flat saturated colors, oversized head (1/3 body), huge eyes (40% face), bold primaries, simple geometric backgrounds, motion lines |
-| Storybook | Visible brushstrokes, rich layered color, detailed textures (wood/fabric/leaves), warm golden glow, soft blend edges, muted palette, foreground/mid/background depth |
-| Watercolor | Transparent washes, white paper visible, soft pastels, dissolved edges, minimal detail, light/airy/dreamy, white space |
 
 ### Current Illustration Weaknesses
 
-1. **Style similarity**: Flux Pro Kontext is one model trying to handle 3 very different styles via prompt alone. The style render instructions differentiate at the prompt level but the model's interpretation is inconsistent.
+1. **Character consistency across pages**: Each page generates independently. Despite the character sheet, the model produces variations in outfit, hairstyle, and setting between pages.
 
-2. **Character consistency across pages**: Each page generates independently. Despite the character sheet, the model produces variations in outfit, hairstyle, and setting between pages.
+2. **Quality check limitations**: The quality check catches gross errors but cannot enforce subtle style consistency. A page might "pass" all 10 criteria while still looking different from other pages in the book.
 
-3. **Quality check limitations**: The quality check catches gross errors but cannot enforce subtle style consistency. A page might "pass" all 10 criteria while still looking different from other pages in the book.
-
-4. **Photo likeness fidelity**: Kontext model is designed for image editing, not character consistency. It transforms the input photo each time independently, leading to drift.
+3. **Photo likeness fidelity**: Kontext model is designed for image editing, not character consistency. It transforms the input photo each time independently, leading to drift.
 
 ### Recommended Improvements
 
 1. **Use LoRA fine-tuning**: Train a per-child LoRA adapter on the 3 uploaded photos. Use this adapter for all 8 pages. This ensures consistent character representation.
-
-2. **Style-specific models**: Use different fal.ai models for different styles rather than one model for all.
 
 3. **Seed consistency**: Pass a fixed seed for all pages of one story to reduce random variation.
 

@@ -16,7 +16,7 @@ The AI pipeline generates a complete 8-page personalized children's storybook fr
 INPUT:                           OUTPUT:
 +------------------+             +------------------+
 | Child Name       |             | Story Title      |
-| Age (2-12)       |             | 8 Pages:         |
+| Age (3-7)        |             | 8 Pages:         |
 | Interests[]      |             |   - text_content |
 | Reading Level    |   PIPELINE  |   - illustration |
 | Theme            | ==========> | Character Sheet  |
@@ -144,10 +144,10 @@ The combined prompt integrates all personalization, reading-level constraints, a
 
 ### Reading Level Specifications
 
-| Parameter | Beginner (Ages 3-4) | Intermediate (Ages 5-6) |
+| Parameter | Beginner (Ages 3-4) | Intermediate (Ages 5-7) |
 |-----------|---------------------|-------------------------|
 | Pages | 8 exactly | 8 exactly |
-| Sentences/page | 1-2 (STRICT) | 2-4 |
+| Sentences/page | 1-2 (STRICT) | 2-3 (STRICT) |
 | Words/sentence | 5-9 (STRICT) | 8-14 |
 | Vocabulary | Preschool only (mama, big, little, run, jump, splash, yummy, uh-oh, yay) | Richer but concrete (curious, enormous, shimmer, tumbled, whispered) |
 | Refrain | 3-5 words, repeat 4+ times | 5-8 words, repeat 3+ times |
@@ -226,8 +226,6 @@ unfortunately, immediately, particularly
 | Style | Shorthand Applied to fal.ai Prompts |
 |-------|--------------------------------------|
 | Cartoon | "bold cartoon with thick outlines, flat vivid colors, big expressive eyes" |
-| Storybook | "warm painterly storybook illustration with soft brushstrokes and golden lighting" |
-| Watercolor | "gentle watercolor with soft washes, pastel colors, and white paper showing through" |
 
 ---
 
@@ -262,29 +260,13 @@ No text, words, or watermarks in the image.
 
 ### Style Render Instructions
 
-**Cartoon:**
+**Cartoon (fixed style):**
 ```
 Use thick black outlines around everything. Use flat, saturated colors with no gradients.
 Make the child's head slightly oversized (1/3 of body height) with huge expressive eyes
 (taking up 40% of face). Colors should be bold primaries and secondaries.
 Background should be simple geometric shapes. Add motion lines for action.
 No texture, no realistic shading.
-```
-
-**Storybook:**
-```
-Use visible brushstrokes throughout. Build rich, layered color with detailed textures
-(wood grain, fabric weave, individual leaves). Add warm golden-hour glow lighting.
-Edges should be soft and blended. Use muted, warm palette (forest green, amber, burnt
-orange, teal). Create clear foreground, midground, and background depth layers.
-```
-
-**Watercolor:**
-```
-Use transparent color washes with visible white paper showing through. Keep soft pastel
-palette (pale blue, blush pink, buttercup yellow). Edges should dissolve into white.
-Minimize detail -- suggest rather than define. Keep the image light, airy, and dreamy.
-Leave white space. No hard lines or bold colors.
 ```
 
 ### Execution Pattern
@@ -317,13 +299,10 @@ const results = await Promise.allSettled(
 ### Trigger Condition
 Any unhandled exception during `generateWithAI()` causes the entire pipeline to fall back.
 
-### Fallback Stories (5 themes)
+### Fallback Stories (2 themes)
 
 | Theme | Title | Refrain | Personalization |
 |-------|-------|---------|-----------------|
-| Dinosaurs | "${name} and Bramblesnout" | "Brave and kind, that's what we are" | Name only |
-| Space | "Captain ${name} and the Stars" | "One more step, one more star" | Name only |
-| Enchanted Forest | "${name} and the Song of Mosshollow" | "Together we listen, together we sing" | Name only |
 | Superhero | "${name} and the Kindness Badge" | "Small acts, big hearts, that's our start" | Name only |
 | Fairy Tale | "${name} and the Wobbly Kingdom" | "A crown to find, a world to mend" | Name only |
 

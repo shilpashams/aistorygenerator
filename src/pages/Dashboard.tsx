@@ -215,19 +215,32 @@ function ThemeDistribution({ storiesByTheme }: { storiesByTheme: Record<string, 
   const total = Object.values(storiesByTheme).reduce((a, b) => a + b, 0);
   if (total === 0) return <p className="text-sm text-gray-500">No stories yet</p>;
 
+  const supportedThemes = ['superhero', 'fairy-tale'];
+
   const themeColors: Record<string, string> = {
     superhero: 'bg-brand-400',
     'fairy-tale': 'bg-ocean-400',
+    other: 'bg-gray-300',
   };
 
   const themeLabels: Record<string, string> = {
     superhero: 'Superhero Quest',
     'fairy-tale': 'Fairy Tale Kingdom',
+    other: 'Other (legacy)',
   };
+
+  const grouped: Record<string, number> = {};
+  Object.entries(storiesByTheme).forEach(([theme, count]) => {
+    if (supportedThemes.includes(theme)) {
+      grouped[theme] = (grouped[theme] || 0) + count;
+    } else {
+      grouped['other'] = (grouped['other'] || 0) + count;
+    }
+  });
 
   return (
     <div className="space-y-3">
-      {Object.entries(storiesByTheme)
+      {Object.entries(grouped)
         .sort(([, a], [, b]) => b - a)
         .map(([theme, count]) => (
           <div key={theme} className="flex items-center gap-3">
@@ -513,12 +526,14 @@ export function Dashboard() {
               {Object.keys(stats.storiesByTheme).length > 0 ? (
                 <div className="space-y-2">
                   {Object.entries(stats.storiesByTheme)
+                    .filter(([theme]) => ['superhero', 'fairy-tale'].includes(theme))
                     .sort(([, a], [, b]) => b - a)
-                    .slice(0, 3)
                     .map(([theme, count], i) => (
                       <div key={theme} className="flex items-center gap-2">
                         <span className="text-sm font-bold text-gray-400 w-4">{i + 1}.</span>
-                        <span className="text-sm text-gray-700 capitalize">{theme.replace('-', ' ')}</span>
+                        <span className="text-sm text-gray-700">
+                          {theme === 'superhero' ? 'Superhero Quest' : 'Fairy Tale Kingdom'}
+                        </span>
                         <span className="ml-auto text-xs font-mono text-gray-500">{count}</span>
                       </div>
                     ))}

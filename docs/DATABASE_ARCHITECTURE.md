@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS stories (
   child_profile_id uuid NOT NULL REFERENCES child_profiles(id),
   title text NOT NULL DEFAULT '',
   theme text NOT NULL DEFAULT '',
-  illustration_style text NOT NULL DEFAULT 'watercolor',
+  illustration_style text NOT NULL DEFAULT 'cartoon',
   status text NOT NULL DEFAULT 'pending',
   page_count integer NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS stories (
 | child_profile_id | uuid | NO | - | FK child_profiles(id) | Parent profile reference |
 | title | text | NO | '' | - | AI-generated story title |
 | theme | text | NO | '' | - | superhero/fairy-tale |
-| illustration_style | text | NO | 'watercolor' | - | cartoon/storybook/watercolor |
+| illustration_style | text | NO | 'cartoon' | - | cartoon (fixed) |
 | status | text | NO | 'pending' | - | pending/generating/complete/failed |
 | page_count | integer | NO | 0 | - | Final page count (set on completion) |
 | created_at | timestamptz | NO | now() | - | Row creation timestamp |

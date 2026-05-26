@@ -37,7 +37,7 @@ erDiagram
         uuid child_profile_id "NOT NULL REFERENCES child_profiles(id)"
         text title "NOT NULL DEFAULT ''"
         text theme "NOT NULL DEFAULT ''"
-        text illustration_style "NOT NULL DEFAULT 'watercolor'"
+        text illustration_style "NOT NULL DEFAULT 'cartoon'"
         text status "NOT NULL DEFAULT 'pending'"
         integer page_count "NOT NULL DEFAULT 0"
         timestamptz created_at "NOT NULL DEFAULT now()"
@@ -99,7 +99,7 @@ Tracks story generation requests and their completion status.
 | `child_profile_id` | uuid | NO | - | FK to child_profiles |
 | `title` | text | NO | `''` | AI-generated story title |
 | `theme` | text | NO | `''` | Selected theme identifier |
-| `illustration_style` | text | NO | `'watercolor'` | Selected style identifier |
+| `illustration_style` | text | NO | `'cartoon'` | Illustration style (fixed to cartoon) |
 | `status` | text | NO | `'pending'` | Generation pipeline status |
 | `page_count` | integer | NO | `0` | Number of generated pages |
 | `created_at` | timestamptz | NO | `now()` | Record creation time |
@@ -110,7 +110,7 @@ Tracks story generation requests and their completion status.
 
 **Valid Values:**
 - `theme`: `'superhero'`, `'fairy-tale'`
-- `illustration_style`: `'watercolor'`, `'cartoon'`, `'storybook'`
+- `illustration_style`: `'cartoon'`
 - `status`: `'pending'`, `'generating'`, `'complete'`, `'failed'`
 
 **Status State Machine:**

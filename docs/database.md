@@ -55,7 +55,7 @@ Primary entity. Created once per wizard completion. Contains all input data need
 | interests | text[] | NO | `'{}'` | -- |
 | favorite_things | text | NO | `''` | -- |
 | themes_to_avoid | text | NO | `''` | -- |
-| reading_level | text | NO | `'intermediate'` | -- |
+| reading_level | text | NO | `'beginner'` | -- |
 | photo_urls | text[] | NO | `'{}'` | -- |
 | session_id | text | NO | -- | Indexed |
 | user_id | uuid | YES | NULL | FK -> auth.users(id) |
@@ -77,7 +77,7 @@ Tracks generation state and metadata. Created with `status='pending'`, progresse
 | child_profile_id | uuid | NO | -- | FK -> child_profiles(id) |
 | title | text | NO | `''` | -- |
 | theme | text | NO | -- | -- |
-| illustration_style | text | NO | `'storybook'` | -- |
+| illustration_style | text | NO | `'cartoon'` | -- |
 | status | text | NO | `'pending'` | -- |
 | page_count | integer | NO | `0` | -- |
 | created_at | timestamptz | NO | `now()` | -- |

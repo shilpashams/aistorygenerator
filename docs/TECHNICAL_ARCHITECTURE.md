@@ -401,7 +401,7 @@ This ensures consistency without needing conversation memory or embeddings.
 |--------|------|---------|-------------|
 | id | uuid | gen_random_uuid() | Primary key |
 | name | text | '' | Child's first name |
-| age | integer | 5 | Child's age (2-12) |
+| age | integer | 5 | Child's age (3-7) |
 | interests | text[] | '{}' | Array of interest strings |
 | favorite_things | text | '' | Color, animal, food |
 | themes_to_avoid | text | '' | Excluded themes |
@@ -419,7 +419,7 @@ This ensures consistency without needing conversation memory or embeddings.
 | child_profile_id | uuid | - | FK to child_profiles |
 | title | text | '' | Generated story title |
 | theme | text | '' | superhero/fairy-tale |
-| illustration_style | text | 'watercolor' | watercolor/cartoon/storybook |
+| illustration_style | text | 'cartoon' | cartoon (fixed) |
 | status | text | 'pending' | pending/generating/complete/failed |
 | page_count | integer | 0 | Number of pages |
 | created_at | timestamptz | now() | Creation timestamp |
@@ -822,9 +822,7 @@ Client -> API (creates job) -> Queue (Redis/Supabase Realtime)
 ### Illustration Styles
 | ID | Label | Description |
 |----|-------|-------------|
-| watercolor | Watercolor | Soft washes, dreamy colors |
-| cartoon | Cartoon | Bold outlines, vivid colors |
-| storybook | Classic Storybook | Warm, detailed traditional artwork |
+| cartoon | Cartoon | Bold outlines, vivid colors, exaggerated expressions |
 
 ### Story Moods
 | ID | Label | Tone |

@@ -135,8 +135,6 @@ No text or words in the image.
 | Style | Prompt Description |
 |-------|-------------------|
 | cartoon | Bright and cheerful cartoon illustration style with bold outlines and vivid colors |
-| storybook | Classic children's storybook illustration with warm, detailed artwork |
-| digital-art | Polished digital art illustration with rich colors and smooth gradients |
 
 ### Queue-Based Execution Protocol
 
@@ -253,7 +251,7 @@ In ALL cases, the user receives a complete 8-page readable story. The quality de
 | Level | Pages | Sentences/Page | Words/Sentence | Key Constraints |
 |-------|-------|---------------|----------------|-----------------|
 | Beginner (3-4) | 8 | 1-2 | 5-9 | Preschool vocabulary only, single exclamations (no dialogue), one onomatopoeia/page |
-| Intermediate (5-6) | 8 | 2-4 | 8-14 | Richer vocabulary, real dialogue on 4+ pages, one metaphor allowed, rich sensory details |
+| Intermediate (5-7) | 8 | 2-3 | 8-14 | Richer vocabulary, real dialogue on 4+ pages, one metaphor allowed, rich sensory details |
 
 Post-generation, a local validation engine checks each page against these constraints. If pages fail, a targeted rewrite API call fixes only the failing pages.
 

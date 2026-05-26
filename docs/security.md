@@ -124,7 +124,7 @@ story_pages ← story_id ownership check (nested subquery)
 |-------|-----------|-----------|
 | Photos | image/* MIME type, max 3 files | PhotoUpload |
 | Name | Non-empty string | ChildProfile |
-| Age | Integer, 2-12 range | ChildProfile |
+| Age | Integer, 3-7 range | ChildProfile |
 | Interests | 1-5 selections from fixed list | ChildProfile |
 | Theme | Must match predefined ID | ThemeSelection |
 | Illustration style | Must match predefined ID | ThemeSelection |
