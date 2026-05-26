@@ -151,7 +151,7 @@ User selects files -> Client validates (image/*, max 3)
 ### 4.2 Child Profile Creation
 
 ```
-User fills form -> Validated client-side (name required, age 2-12, 1+ interest, mood required)
+User fills form -> Validated client-side (name required, age 3-7, 1+ interest, mood required)
   -> Stored in WizardContext state
   -> No DB write until generation begins
 ```
@@ -804,6 +804,20 @@ Client -> API (creates job) -> Queue (Redis/Supabase Realtime)
 |----|-------|-------------------|
 | superhero | Superhero Quest | Vibrant city with heroic characters |
 | fairy-tale | Fairy Tale Kingdom | Whimsical kingdom with castles and dragons |
+
+### Child Interests (select up to 5)
+| Interest |
+|----------|
+| Space |
+| Animals |
+| Princesses |
+| Superheroes |
+| Cars & Trucks |
+| Fairies & Magic |
+| Sports |
+| Music |
+| Robots |
+| Art & Drawing |
 
 ### Illustration Styles
 | ID | Label | Description |

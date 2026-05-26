@@ -30,8 +30,8 @@ interface StoryRequest {
   story_id: string;           // UUID of pre-created story row
   child_profile_id: string;   // UUID of associated child profile
   name: string;               // Child's first name
-  age: number;                // Child's age (2-12)
-  interests: string[];        // 1-5 interest strings
+  age: number;                // Child's age (3-7)
+  interests: string[];        // 1-5 from: "Space" | "Animals" | "Princesses" | "Superheroes" | "Cars & Trucks" | "Fairies & Magic" | "Sports" | "Music" | "Robots" | "Art & Drawing"
   favorite_things: string;    // Free-text (color, animal, food -- may be empty)
   themes_to_avoid: string;    // Free-text exclusions (may be empty)
   reading_level: string;      // "beginner" | "intermediate"

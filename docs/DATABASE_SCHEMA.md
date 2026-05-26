@@ -68,7 +68,7 @@ Stores the child's identity and personalization data used to generate stories.
 |--------|------|----------|---------|-------------|
 | `id` | uuid | NO | `gen_random_uuid()` | Primary key |
 | `name` | text | NO | `''` | Child's first name |
-| `age` | integer | NO | `5` | Child's age (2-12) |
+| `age` | integer | NO | `5` | Child's age (3-7) |
 | `interests` | text[] | NO | `'{}'` | Array of interest strings (max 5) |
 | `favorite_things` | text | NO | `''` | Free-text: color, animal, food |
 | `themes_to_avoid` | text | NO | `''` | Content to exclude from stories |
@@ -84,8 +84,8 @@ Stores the child's identity and personalization data used to generate stories.
 
 **Valid Values:**
 - `reading_level`: `'beginner'`, `'intermediate'`
-- `age`: 2-12 (enforced client-side only)
-- `interests`: up to 5 items (enforced client-side only)
+- `age`: 3-7 (enforced client-side only)
+- `interests`: up to 5 items from: Space, Animals, Princesses, Superheroes, Cars & Trucks, Fairies & Magic, Sports, Music, Robots, Art & Drawing (enforced client-side only)
 
 ---
 

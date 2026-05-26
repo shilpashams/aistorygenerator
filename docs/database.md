@@ -62,7 +62,7 @@ Primary entity. Created once per wizard completion. Contains all input data need
 | created_at | timestamptz | NO | `now()` | -- |
 
 **Design Notes**:
-- `interests` is a text array rather than a junction table because the interest list is fixed (14 options) and query patterns never filter by individual interest.
+- `interests` is a text array rather than a junction table because the interest list is fixed (10 options: Space, Animals, Princesses, Superheroes, Cars & Trucks, Fairies & Magic, Sports, Music, Robots, Art & Drawing) and query patterns never filter by individual interest.
 - `photo_urls` stores public Supabase Storage URLs. These are stable (don't expire) because the bucket is public.
 - `session_id` is NOT a foreign key -- it's a client-generated UUID with no server-side session table. This is intentional: we don't need session metadata, just an isolation key.
 - `user_id` is nullable to support anonymous-first access. When auth is added, this column bridges to `auth.users`.

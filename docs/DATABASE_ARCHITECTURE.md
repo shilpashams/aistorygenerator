@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS child_profiles (
 |--------|------|----------|---------|-------------|-------------|
 | id | uuid | NO | gen_random_uuid() | PK | Auto-generated unique ID |
 | name | text | NO | '' | - | Child's first name (used as story protagonist) |
-| age | integer | NO | 5 | - | Age in years (2-12, affects reading level) |
-| interests | text[] | NO | '{}' | - | Array of selected interests (max 5) |
+| age | integer | NO | 5 | - | Age in years (3-7, affects reading level) |
+| interests | text[] | NO | '{}' | - | Array of selected interests (max 5 from: Space, Animals, Princesses, Superheroes, Cars & Trucks, Fairies & Magic, Sports, Music, Robots, Art & Drawing) |
 | favorite_things | text | NO | '' | - | Free-text description of favorites |
 | themes_to_avoid | text | NO | '' | - | Topics to exclude from story |
 | reading_level | text | NO | 'beginner' | - | 'beginner' or 'intermediate' |

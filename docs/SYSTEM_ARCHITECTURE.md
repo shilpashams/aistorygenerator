@@ -179,8 +179,8 @@ interface WizardData {
   photos: File[];
   photoPreviewUrls: string[];
   name: string;
-  age: number;                    // 2-12
-  interests: string[];            // max 5
+  age: number;                    // 3-7
+  interests: string[];            // max 5 from: Space | Animals | Princesses | Superheroes | Cars & Trucks | Fairies & Magic | Sports | Music | Robots | Art & Drawing
   favorite_things: string;
   themes_to_avoid: string;
   reading_level: string;          // beginner | intermediate
