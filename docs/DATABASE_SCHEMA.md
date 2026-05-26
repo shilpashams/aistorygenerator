@@ -109,7 +109,7 @@ Tracks story generation requests and their completion status.
 - Foreign Key: `child_profile_id` -> `child_profiles(id)`
 
 **Valid Values:**
-- `theme`: `'dinosaurs'`, `'space'`, `'enchanted-forest'`, `'superhero'`, `'fairy-tale'`
+- `theme`: `'superhero'`, `'fairy-tale'`
 - `illustration_style`: `'watercolor'`, `'cartoon'`, `'storybook'`
 - `status`: `'pending'`, `'generating'`, `'complete'`, `'failed'`
 

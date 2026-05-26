@@ -41,9 +41,6 @@ interface GeneratedStory {
 }
 
 const themeDescriptions: Record<string, string> = {
-  dinosaurs: "a colorful prehistoric world with friendly dinosaurs, lush jungles, and volcanoes in the background",
-  space: "outer space with colorful planets, sparkling stars, nebulae, and a cozy spaceship",
-  "enchanted-forest": "a magical enchanted forest with glowing mushrooms, fairy lights, ancient trees, and woodland creatures",
   superhero: "a vibrant city skyline with dramatic lighting, capes flowing in the wind, and heroic poses",
   "fairy-tale": "a whimsical fairy tale kingdom with castles, dragons, enchanted gardens, and sparkling magic",
 };
@@ -211,18 +208,6 @@ function buildStoryBiblePrompt(req: StoryRequest, childVisualDetails: string): s
   const creativeSeed = generateCreativeSeed();
 
   const themeWorldBuilding: Record<string, string> = {
-    dinosaurs: `WORLD SEED: A warm, green prehistoric valley with giant ferns, a sparkly river, and friendly dinosaurs.
-POSSIBLE CHARACTERS: A clumsy baby triceratops, a chatty pterodactyl, a gentle old brachiosaurus.
-SENSORY PALETTE: Crunchy leaves, warm mud, rumbling footsteps, sweet tropical flowers.`,
-
-    space: `WORLD SEED: A cozy little spaceship visiting colorful planets and twinkling stars.
-POSSIBLE CHARACTERS: A sparkly crystal creature, a bouncy jelly-blob alien, a kind station keeper.
-SENSORY PALETTE: Humming engines, floating in zero-gravity, warm cockpit glow, cold starlight.`,
-
-    "enchanted-forest": `WORLD SEED: A deep magical forest with glowing mushrooms, mossy paths, and a babbling brook.
-POSSIBLE CHARACTERS: A badger in a berry-stained apron, a copper-feathered owl, woodland mice.
-SENSORY PALETTE: Crunching twigs, pine smell, dappled sunlight, cool moss, birdsong.`,
-
     superhero: `WORLD SEED: A friendly neighborhood with a park, shops, and rooftops to leap between.
 POSSIBLE CHARACTERS: A flour-dusted baker with courage-cakes, a speedy crossing guard, kind neighbors.
 SENSORY PALETTE: Wind on rooftops, warm sunshine, cape fluttering, city sounds, the smell of cinnamon rolls.`,
@@ -251,7 +236,7 @@ SENSORY PALETTE: Creaking drawbridge, trumpet fanfares, velvet cloaks, feast sme
 
   const readingLevelBlock = getReadingLevelPromptBlock(req.reading_level);
 
-  return `You are a children's picture book author planning a story for ages 3-6. Before writing, you always create a Story Bible -- a creative blueprint that ensures consistency, emotional depth, and a story children will demand again and again.
+  return `You are a children's picture book author planning a story for ages 3-7. Before writing, you always create a Story Bible -- a creative blueprint that ensures consistency, emotional depth, and a story children will demand again and again.
 
 IMPORTANT: Every story you create must be COMPLETELY UNIQUE. Never reuse the same plot, sidekick name, title, or narrative structure. Each story should feel like a brand new adventure even if the same child and theme are used.
 
@@ -276,7 +261,7 @@ STORY MOOD: ${req.story_mood || "silly-adventure"}
 ${storyMoodGuidance[req.story_mood] || storyMoodGuidance["silly-adventure"]}
 
 THEME: ${req.theme}
-${themeWorldBuilding[req.theme] || themeWorldBuilding["enchanted-forest"]}
+${themeWorldBuilding[req.theme] || themeWorldBuilding["superhero"]}
 
 AGE-APPROPRIATE PROBLEM SOLVING (age ${req.age}):
 ${ageProblemSolving}
@@ -881,9 +866,6 @@ function buildCombinedStoryPrompt(req: StoryRequest, childVisualDetails: string)
   const cfg = readingLevelConfig[req.reading_level] || readingLevelConfig.beginner;
 
   const themeWorldBuilding: Record<string, string> = {
-    dinosaurs: `WORLD: A warm prehistoric valley with giant ferns, sparkly river, friendly dinosaurs. SIDEKICK IDEAS: clumsy baby triceratops, chatty pterodactyl, gentle brachiosaurus.`,
-    space: `WORLD: A cozy spaceship visiting colorful planets and twinkling stars. SIDEKICK IDEAS: sparkly crystal creature, bouncy jelly-blob alien, kind station keeper.`,
-    "enchanted-forest": `WORLD: A deep magical forest with glowing mushrooms, mossy paths, babbling brook. SIDEKICK IDEAS: badger in berry-stained apron, copper-feathered owl, woodland mice.`,
     superhero: `WORLD: A friendly neighborhood with park, shops, rooftops to leap between. SIDEKICK IDEAS: flour-dusted baker with courage-cakes, speedy crossing guard, kind neighbors.`,
     "fairy-tale": `WORLD: A storybook kingdom with wonky castle, rolling hills, cobblestone village. SIDEKICK IDEAS: tiny dragon afraid of fire, fairy godparent always late, jolly king.`,
   };
@@ -915,7 +897,7 @@ CHILD: ${req.name}, age ${req.age}
 - Visual from photo: ${childVisualDetails !== "no details extracted" ? childVisualDetails : "none available"}
 
 THEME: ${req.theme}
-${themeWorldBuilding[req.theme] || themeWorldBuilding["enchanted-forest"]}
+${themeWorldBuilding[req.theme] || themeWorldBuilding["superhero"]}
 
 MOOD: ${req.story_mood || "silly-adventure"}
 ${storyMoodGuidance[req.story_mood] || storyMoodGuidance["silly-adventure"]}
@@ -1354,36 +1336,6 @@ async function generateChainedWithQualityCheck(
 }
 
 const fallbackIllustrationMap: Record<string, string[]> = {
-  dinosaurs: [
-    "https://images.pexels.com/photos/3571551/pexels-photo-3571551.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/33535/praying-mantis-702-702-702.jpg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/2832034/pexels-photo-2832034.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1374295/pexels-photo-1374295.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/36717/amazing-animal-beautiful-beauty.jpg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3571551/pexels-photo-3571551.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/2832034/pexels-photo-2832034.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1374295/pexels-photo-1374295.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
-  space: [
-    "https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1341279/pexels-photo-1341279.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/956981/pexels-photo-956981.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1274260/pexels-photo-1274260.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1229042/pexels-photo-1229042.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1169754/pexels-photo-1169754.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/956981/pexels-photo-956981.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1341279/pexels-photo-1341279.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
-  "enchanted-forest": [
-    "https://images.pexels.com/photos/1179229/pexels-photo-1179229.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/2295744/pexels-photo-2295744.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1423600/pexels-photo-1423600.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1366630/pexels-photo-1366630.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1486974/pexels-photo-1486974.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1179229/pexels-photo-1179229.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1423600/pexels-photo-1423600.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/2295744/pexels-photo-2295744.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
   superhero: [
     "https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg?auto=compress&cs=tinysrgb&w=800",
     "https://images.pexels.com/photos/1089842/pexels-photo-1089842.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -1411,45 +1363,6 @@ function generateFallbackStory(req: StoryRequest): GeneratedStory {
   const theme = req.theme;
 
   const stories: Record<string, GeneratedStory> = {
-    dinosaurs: {
-      title: `${name} and Bramblesnout`,
-      pages: [
-        { page_number: 1, text: `${name} dug in the garden and found a golden egg, warm as sunshine. It cracked -- POP! -- and two big amber eyes blinked up.`, illustration_prompt: `The child kneeling in a sunny garden holding a cracked golden egg, a tiny green baby triceratops with amber eyes peeking out, warm morning light, ferns around them` },
-        { page_number: 2, text: `Out tumbled a tiny green triceratops with clumsy feet. THUMP, CRASH -- it knocked over a flowerpot and sneezed. "I'll call you Bramblesnout," ${name} laughed.`, illustration_prompt: `The child giggling as a small green triceratops stumbles into a flowerpot, dirt and petals flying, bright cheerful garden scene` },
-        { page_number: 3, text: `Bramblesnout tugged ${name}'s hand toward the old stone wall. Behind the ivy was a glowing archway -- and through it, a sad WHOOO echoed. Someone needed help. Brave and kind, that's what we are.`, illustration_prompt: `The child and Bramblesnout discovering a glowing stone archway behind ivy on a garden wall, warm amber light spilling through, curiosity on both faces` },
-        { page_number: 4, text: `They stepped through into a jungle of giant ferns! STOMP, STOMP -- the ground shook. A pterodactyl named Fizzbeak swooped down. "Granny Fern is stuck in the mud! Follow me -- quick, quick, quick!"`, illustration_prompt: `The child and Bramblesnout in a lush prehistoric valley looking up at a colorful pterodactyl swooping down toward them, giant ferns and a copper river behind` },
-        { page_number: 5, text: `At the mud flats, a big gentle brachiosaurus was sinking. "Don't worry!" ${name} called. Bramblesnout dragged logs, Fizzbeak carried sticks, and together they built a bridge. Brave and kind, that's what we are.`, illustration_prompt: `The child directing as Bramblesnout drags a log and Fizzbeak carries sticks, building a bridge across grey mud toward a large gentle brachiosaurus, teamwork scene` },
-        { page_number: 6, text: `The mud was thick and gloopy. SQUELCH! The bridge wobbled. ${name} took a deep breath. It was scary -- but friends were counting on them.`, illustration_prompt: `The child carefully stepping onto a wobbly log bridge over bubbling mud, Bramblesnout behind looking worried, tense but brave moment` },
-        { page_number: 7, text: `${name} pushed with all their might. Bramblesnout pulled. Fizzbeak heaved. GLORP! -- out came Granny Fern with a great big splash! "Thank you, little ones," she rumbled. Brave and kind, that's what we are.`, illustration_prompt: `The child pushing, Bramblesnout pulling, Fizzbeak heaving as the brachiosaurus lurches free from mud with a big splash, triumphant joyful moment, golden light` },
-        { page_number: 8, text: `Granny Fern hummed a deep warm song. Bramblesnout fell asleep in ${name}'s lap, snoring softly. "Come back tomorrow?" she asked. "Tomorrow," ${name} promised. And the golden archway glowed, waiting for the next adventure. The End.`, illustration_prompt: `The child sitting in golden sunset light with sleeping Bramblesnout in their lap, Granny Fern's gentle silhouette humming in the background, a glowing archway nearby, peaceful and warm` },
-      ],
-    },
-    space: {
-      title: `Captain ${name} and the Stars`,
-      pages: [
-        { page_number: 1, text: `${name} counted stars from the rooftop when -- WHOOSH! -- a tiny silver ship landed on the railing. A hatch popped open and a sparkly crystal creature tumbled out, jingling like bells.`, illustration_prompt: `The child on a rooftop at night as a tiny silver spaceship lands on the railing, a small crystalline creature tumbling out, stars everywhere, moonlit` },
-        { page_number: 2, text: `"I'm Prism!" it chimed. "I'm lost -- three galaxies off course. Will you help me find my way home?" Its little crystal face looked so hopeful. One more step, one more star.`, illustration_prompt: `The child crouching down to meet Prism, a small rainbow-refracting crystal creature with hopeful eyes, silver spaceship behind them, starry night` },
-        { page_number: 3, text: `Inside the ship, Prism showed ${name} a broken star-map with scattered dots. "Without this, I'll never find Station Wanderlost." A tear like a diamond rolled down its cheek.`, illustration_prompt: `The child and Prism inside a cozy cockpit looking at a flickering broken star-map on a screen, Prism looking sad, blue and green light filling the cabin` },
-        { page_number: 4, text: `"Let's fix it together!" ${name} said. The ship shot upward -- ZOOM! Stars streaked past the windows. They whooshed through a pink-and-gold nebula that smelled like cotton candy. One more step, one more star.`, illustration_prompt: `The child and Prism flying through a magnificent pink-and-gold nebula, stars streaking past the viewport, wonder on the child's face` },
-        { page_number: 5, text: `A big bouncy blob named Bloop floated alongside. "Need help? I know shortcuts!" Bloop bounced the ship around asteroids -- BOING, BOING, BOING -- while ${name} read the stars and Prism lit the way.`, illustration_prompt: `The child pointing directions while a purple jelly-blob creature bounces them past asteroids, Prism glowing to light the path, playful and energetic scene` },
-        { page_number: 6, text: `But the station was dark and cold when they arrived. Its lights had gone out. "Oh no," Prism whispered, crystals dimming. "Everyone's lost in the dark." ${name}'s tummy fluttered, but they squeezed Prism's hand.`, illustration_prompt: `The child and Prism arriving at a dark flickering space station, lights going out, Prism dimming with worry, the child squeezing Prism's hand, tense moment` },
-        { page_number: 7, text: `"Everyone glow a little!" ${name} called. Prism sparkled. Bloop bounced the light. Tiny creatures flickered on, one by one, brighter and brighter until -- FLASH! -- the whole station blazed with color! One more step, one more star.`, illustration_prompt: `The child in the center with arms raised as Prism refracts light and dozens of creatures glow, the station lighting up in a burst of rainbow color, triumphant joy` },
-        { page_number: 8, text: `Prism gave ${name} a tiny glowing orb. "A piece of starlight -- so you always find your way." Back on the rooftop, the stars felt closer than ever. ${name} held the orb tight and smiled. One more step, one more star. The End.`, illustration_prompt: `The child back on the rooftop at dawn holding a small glowing orb, the silver ship departing as a twinkle in the sky, warm sunrise colors, peaceful smile` },
-      ],
-    },
-    "enchanted-forest": {
-      title: `${name} and the Song of Mosshollow`,
-      pages: [
-        { page_number: 1, text: `Behind the garden wall, ${name} found a crack that breathed out warm air smelling of pine and honey. Through the gap, green light danced between ancient trees. CREAK -- the crack opened wider.`, illustration_prompt: `The child peering through a crack in a mossy stone wall, warm green light spilling out from an ancient forest beyond, curiosity and wonder on their face` },
-        { page_number: 2, text: `On the other side sat a badger in a berry-stained apron, stirring a bubbling pot. "I'm Nettlewick!" she said in a gravelly voice. "Haven't had a visitor in forty acorn-seasons. Come, come -- bramble tea?" Together we listen, together we sing.`, illustration_prompt: `The child meeting a stout friendly badger in a berry-stained apron next to a bubbling pot between giant tree roots, cozy warm light, welcoming scene` },
-        { page_number: 3, text: `Nettlewick's whiskers drooped. "The forest has gone quiet," she said. "The Song Tree is tangled up, and without its music, nothing will bloom. Spring can't come." Her eyes looked to ${name}. "Will you help?"`, illustration_prompt: `The child and Nettlewick looking out at a grey, budless forest, Nettlewick's whiskers drooping sadly, bare branches visible, the child looking determined` },
-        { page_number: 4, text: `They padded down the mossy path -- CRUNCH, CRUNCH -- past glowing mushrooms and sleeping hedgehogs. A copper owl named Quillsworth glided down. "Following you two! Together we'll figure it out." Together we listen, together we sing.`, illustration_prompt: `The child and Nettlewick walking down a mossy path past glowing mushrooms as a copper-feathered owl glides down to join them, dappled forest light` },
-        { page_number: 5, text: `Inside the great hollow tree, silver threads crisscrossed like a giant harp -- but all knotted up. Nettlewick's nimble paws untied the low ones. Quillsworth flew to the high ones. ${name} listened for which notes matched. PLUCK -- a sweet sound rang out!`, illustration_prompt: `The child listening intently inside a hollow tree while Nettlewick unties low silver threads and Quillsworth works on high ones, a few threads glowing with freed musical notes` },
-        { page_number: 6, text: `But the biggest knot was in the middle -- too high for Nettlewick, too tight for Quillsworth's beak. ${name} looked up at it and felt small. The forest was counting on them.`, illustration_prompt: `The child looking up at a large stubborn knot of silver threads in the center of the tree, Nettlewick and Quillsworth beside them looking worried, dramatic light from above` },
-        { page_number: 7, text: `${name} climbed onto Nettlewick's shoulders, reached up, and gently -- gently -- pulled the knot loose. TWANG! The whole tree sang! Music poured out like water. Flowers popped open on every branch. Together we listen, together we sing.`, illustration_prompt: `The child on Nettlewick's shoulders pulling a knot free as the tree explodes with music and flowers bloom instantly on every branch, joyful burst of color and light` },
-        { page_number: 8, text: `Nettlewick pressed a tiny jar into ${name}'s hand -- inside, a thread hummed softly. "So you'll find your way back." Outside the wall, the first flowers of spring were already blooming. Together we listen, together we sing. The End.`, illustration_prompt: `The child back at the mossy wall holding a small glowing jar, Nettlewick and Quillsworth waving from the forest side, spring flowers blooming on both sides, warm evening light` },
-      ],
-    },
     superhero: {
       title: `${name} and the Kindness Badge`,
       pages: [
@@ -1478,7 +1391,7 @@ function generateFallbackStory(req: StoryRequest): GeneratedStory {
     },
   };
 
-  const story = stories[theme] || stories["enchanted-forest"];
+  const story = stories[theme] || stories["superhero"];
   return { ...story, characterSheet: "" };
 }
 
@@ -1559,7 +1472,7 @@ Deno.serve(async (req: Request) => {
     const falKey = Deno.env.get("FAL_KEY");
     const useFal = !!falKey && !!referencePhotoUrl;
 
-    const fallbackImages = fallbackIllustrationMap[theme] || fallbackIllustrationMap.dinosaurs;
+    const fallbackImages = fallbackIllustrationMap[theme] || fallbackIllustrationMap.superhero;
 
     let illustrationUrls: string[] = [];
 

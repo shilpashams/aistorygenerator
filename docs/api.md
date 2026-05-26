@@ -35,7 +35,7 @@ interface StoryRequest {
   favorite_things: string;    // Free-text (color, animal, food -- may be empty)
   themes_to_avoid: string;    // Free-text exclusions (may be empty)
   reading_level: string;      // "beginner" | "intermediate"
-  theme: string;              // "dinosaurs" | "space" | "enchanted-forest" | "superhero" | "fairy-tale"
+  theme: string;              // "superhero" | "fairy-tale"
   illustration_style: string; // "cartoon" | "storybook" | "watercolor"
   photo_urls: string[];       // 1-3 public URLs to uploaded child photos
   favorite_toy: string;       // Child's favorite toy or comfort object

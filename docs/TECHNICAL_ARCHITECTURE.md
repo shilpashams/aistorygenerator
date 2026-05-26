@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-Adventures Of... is an AI-powered children's storybook platform that generates personalized 8-page illustrated picture books for children ages 3-6. The system combines a multi-step AI text generation pipeline (GPT-4o) with AI image generation (fal.ai Flux Pro Kontext) to produce stories that feature the child as the protagonist with their likeness composited into custom illustrations.
+Adventures Of... is an AI-powered children's storybook platform that generates personalized 8-page illustrated picture books for children ages 3-7. The system combines a multi-step AI text generation pipeline (GPT-4o) with AI image generation (fal.ai Flux Pro Kontext) to produce stories that feature the child as the protagonist with their likeness composited into custom illustrations.
 
 The architecture follows a serverless-first approach: React SPA frontend, Supabase (PostgreSQL + Auth + Storage + Edge Functions) backend, and external AI APIs for content generation. No user authentication is required -- sessions are tracked via anonymous UUIDs stored in localStorage.
 
@@ -418,7 +418,7 @@ This ensures consistency without needing conversation memory or embeddings.
 | id | uuid | gen_random_uuid() | Primary key |
 | child_profile_id | uuid | - | FK to child_profiles |
 | title | text | '' | Generated story title |
-| theme | text | '' | dinosaurs/space/enchanted-forest/superhero/fairy-tale |
+| theme | text | '' | superhero/fairy-tale |
 | illustration_style | text | 'watercolor' | watercolor/cartoon/storybook |
 | status | text | 'pending' | pending/generating/complete/failed |
 | page_count | integer | 0 | Number of pages |
@@ -802,9 +802,6 @@ Client -> API (creates job) -> Queue (Redis/Supabase Realtime)
 ### Themes
 | ID | Label | World Description |
 |----|-------|-------------------|
-| dinosaurs | Dinosaur Adventure | Prehistoric valley with friendly dinosaurs |
-| space | Space Explorer | Colorful planets, stars, cozy spaceship |
-| enchanted-forest | Enchanted Forest | Magical forest with glowing mushrooms |
 | superhero | Superhero Quest | Vibrant city with heroic characters |
 | fairy-tale | Fairy Tale Kingdom | Whimsical kingdom with castles and dragons |
 

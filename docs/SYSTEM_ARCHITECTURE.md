@@ -184,7 +184,7 @@ interface WizardData {
   favorite_things: string;
   themes_to_avoid: string;
   reading_level: string;          // beginner | intermediate
-  theme: string;                  // dinosaurs | superhero | fairy-tale
+  theme: string;                  // superhero | fairy-tale
   illustration_style: string;     // cartoon | storybook | watercolor
   favorite_toy: string;
   nickname: string;

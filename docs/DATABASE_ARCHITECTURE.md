@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS stories (
 | id | uuid | NO | gen_random_uuid() | PK | Auto-generated unique ID |
 | child_profile_id | uuid | NO | - | FK child_profiles(id) | Parent profile reference |
 | title | text | NO | '' | - | AI-generated story title |
-| theme | text | NO | '' | - | dinosaurs/superhero/fairy-tale |
+| theme | text | NO | '' | - | superhero/fairy-tale |
 | illustration_style | text | NO | 'watercolor' | - | cartoon/storybook/watercolor |
 | status | text | NO | 'pending' | - | pending/generating/complete/failed |
 | page_count | integer | NO | 0 | - | Final page count (set on completion) |

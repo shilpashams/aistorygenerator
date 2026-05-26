@@ -216,19 +216,13 @@ function ThemeDistribution({ storiesByTheme }: { storiesByTheme: Record<string, 
   if (total === 0) return <p className="text-sm text-gray-500">No stories yet</p>;
 
   const themeColors: Record<string, string> = {
-    dinosaurs: 'bg-forest-400',
-    space: 'bg-ocean-400',
-    'enchanted-forest': 'bg-forest-600',
     superhero: 'bg-brand-400',
-    'fairy-tale': 'bg-sand-400',
+    'fairy-tale': 'bg-ocean-400',
   };
 
   const themeLabels: Record<string, string> = {
-    dinosaurs: 'Dinosaurs',
-    space: 'Space',
-    'enchanted-forest': 'Enchanted Forest',
-    superhero: 'Superhero',
-    'fairy-tale': 'Fairy Tale',
+    superhero: 'Superhero Quest',
+    'fairy-tale': 'Fairy Tale Kingdom',
   };
 
   return (

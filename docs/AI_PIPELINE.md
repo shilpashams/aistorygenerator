@@ -95,9 +95,6 @@ The combined prompt integrates all personalization, reading-level constraints, a
 
 | Theme | Setting | Sidekick Ideas |
 |-------|---------|----------------|
-| Dinosaurs | Warm prehistoric valley with giant ferns and sparkly river | Clumsy baby triceratops, chatty pterodactyl, gentle brachiosaurus |
-| Space | Cozy spaceship visiting colorful planets and twinkling stars | Sparkly crystal creature, bouncy jelly-blob alien, kind station keeper |
-| Enchanted Forest | Deep magical forest with glowing mushrooms and mossy paths | Badger in berry-stained apron, copper-feathered owl, woodland mice |
 | Superhero | Friendly neighborhood with park, shops, and rooftops | Flour-dusted baker with courage-cakes, speedy crossing guard |
 | Fairy Tale | Storybook kingdom with wonky castle and cobblestone village | Tiny dragon afraid of fire, fairy godparent always late, jolly king |
 
@@ -259,7 +256,7 @@ Keep the child's face, features, and likeness EXACTLY as shown in the reference 
 [style_render_instructions - see below]
 Place the child in this scene: [illustration_prompt from Step 3b]
 Setting is [theme_suffix].
-The scene should feel warm, friendly, and appropriate for ages 3-6.
+The scene should feel warm, friendly, and appropriate for ages 3-7.
 No text, words, or watermarks in the image.
 ```
 

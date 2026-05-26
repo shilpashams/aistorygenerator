@@ -171,11 +171,11 @@ fal.ai  → theme-mapped Pexels stock photos (per-page granularity)
 
 ### 5. Theme-Specific World-Building Rules (Not Generic Prompt)
 
-**Decision**: Each theme (dinosaurs, space, enchanted-forest, superhero, fairy-tale) has its own block of world rules including allowed elements, required character types, physical details, AND an explicit prohibition list.
+**Decision**: Each theme (superhero, fairy-tale) has its own block of world rules including allowed elements, required character types, physical details, AND an explicit prohibition list.
 
 **Tradeoff**: More prompt tokens consumed per request (~200 extra tokens per theme block) vs. a shorter generic prompt.
 
-**Why**: GPT models are "magpies" -- they grab shiny elements from training data. Without explicit prohibitions, an enchanted forest story will sometimes include "a rocket ship landed in the clearing" because the model associates "adventure" with space. The `ABSOLUTELY NO: spaceships, rockets, planets...` line eliminates this cross-contamination entirely. The extra cost is ~$0.0003 per story -- negligible.
+**Why**: GPT models are "magpies" -- they grab shiny elements from training data. Without explicit prohibitions, a fairy-tale story will sometimes include elements from the superhero theme because the model associates "adventure" broadly. The prohibition list eliminates this cross-contamination entirely. The extra cost is ~$0.0003 per story -- negligible.
 
 ### 6. 10-Page Stories with Prescribed Arc Structure
 
