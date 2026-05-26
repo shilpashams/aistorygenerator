@@ -94,9 +94,9 @@ const readingLevelConfig: Record<string, ReadingLevelConfig> = {
   },
   intermediate: {
     label: "INTERMEDIATE",
-    ageRange: "ages 5-6",
+    ageRange: "ages 5-7",
     pages: 8,
-    sentencesPerPage: [2, 4],
+    sentencesPerPage: [2, 3],
     wordsPerSentence: [8, 14],
     vocabulary: "simple but richer vocabulary allowed (curious, enormous, shimmer, tumbled, whispered, glimmered, wobbled, enormous, scattered, rumbled) -- still concrete, never abstract",
     refrainRule: "a 5-8 word musical refrain appears on at least 3 pages, naturally woven into the narrative",
