@@ -1,4 +1,4 @@
-import { Camera, Brain, Palette, RefreshCw, Shield, BookMarked } from 'lucide-react';
+import { Camera, Brain, RefreshCw, Shield, BookMarked } from 'lucide-react';
 
 export function Features() {
   const features = [
@@ -13,12 +13,6 @@ export function Features() {
       title: 'Interest-Driven Stories',
       description: 'Dinosaurs, space, cooking, sports, animals - the story theme is built around what your child actually cares about right now.',
       color: 'text-forest-600 bg-forest-50',
-    },
-    {
-      icon: Palette,
-      title: 'Beautiful Book Quality',
-      description: 'Professional illustrations, proper typography, and narrative structure that parents are proud to display. Not AI-looking. Storybook quality.',
-      color: 'text-brand-600 bg-brand-50',
     },
     {
       icon: RefreshCw,
