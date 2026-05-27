@@ -1,4 +1,4 @@
-import { Camera, Brain, RefreshCw, Shield, BookMarked } from 'lucide-react';
+import { Camera, Brain, Shield, BookMarked } from 'lucide-react';
 
 export function Features() {
   const features = [
@@ -13,12 +13,6 @@ export function Features() {
       title: 'Interest-Driven Stories',
       description: 'Dinosaurs, space, cooking, sports, animals - the story theme is built around what your child actually cares about right now.',
       color: 'text-forest-600 bg-forest-50',
-    },
-    {
-      icon: RefreshCw,
-      title: 'Monthly New Adventures',
-      description: 'Subscribe and your child gets a new story every month featuring their character. Interests evolve, stories evolve with them.',
-      color: 'text-sand-700 bg-sand-100',
     },
     {
       icon: Shield,
