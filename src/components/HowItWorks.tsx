@@ -12,7 +12,7 @@ export function HowItWorks() {
     {
       icon: MessageSquare,
       number: '02',
-      title: 'Answer 5 Quick Questions',
+      title: 'Describe Their Personality',
       description: 'Tell us their age, interests, favorite things, reading level, and anything to avoid. Takes under 2 minutes.',
       color: 'bg-forest-50 text-forest-600',
     },
@@ -42,6 +42,13 @@ export function HowItWorks() {
           <p className="mt-4 text-lg text-gray-600">
             Four simple steps. No design skills needed. No waiting weeks for delivery.
           </p>
+          <div className="mt-8 max-w-sm mx-auto">
+            <img
+              src="/ChatGPT_Image_May_27,_2026,_11_11_31_AM.png"
+              alt="Example of a child illustrated in cartoon style"
+              className="w-full rounded-2xl shadow-lg border border-gray-100"
+            />
+          </div>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
