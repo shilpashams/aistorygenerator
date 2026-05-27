@@ -5,7 +5,6 @@ import { TrustStrip } from './components/TrustStrip';
 import { ProblemSection } from './components/ProblemSection';
 import { SolutionSection } from './components/SolutionSection';
 import { HowItWorks } from './components/HowItWorks';
-import { Features } from './components/Features';
 import { Testimonials } from './components/Testimonials';
 import { FinalCTA } from './components/FinalCTA';
 import { Footer } from './components/Footer';
@@ -27,7 +26,6 @@ function LandingPage() {
       <ProblemSection />
       <SolutionSection />
       <HowItWorks />
-      <Features />
       <Testimonials />
       <FinalCTA />
       <Footer />
