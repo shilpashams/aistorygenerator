@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
-import { TrustStrip } from './components/TrustStrip';
 import { ProblemSection } from './components/ProblemSection';
 import { SolutionSection } from './components/SolutionSection';
 import { HowItWorks } from './components/HowItWorks';
@@ -22,7 +21,6 @@ function LandingPage() {
     <div className="min-h-screen">
       <Header />
       <Hero />
-      <TrustStrip />
       <ProblemSection />
       <SolutionSection />
       <HowItWorks />
