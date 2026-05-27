@@ -42,10 +42,10 @@ export function HowItWorks() {
           <p className="mt-4 text-lg text-gray-600">
             Four simple steps. No design skills needed. No waiting weeks for delivery.
           </p>
-          <div className="mt-8 max-w-sm mx-auto">
+          <div className="mt-8 max-w-2xl mx-auto">
             <img
-              src="/ChatGPT_Image_May_27,_2026,_11_11_31_AM.png"
-              alt="Example of a child illustrated in cartoon style"
+              src="/Create_a_Pixar_style_animationScene_202605271117.jpeg"
+              alt="How it works: upload photos, describe personality, AI creates story, child reads"
               className="w-full rounded-2xl shadow-lg border border-gray-100"
             />
           </div>
