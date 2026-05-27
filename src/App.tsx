@@ -6,7 +6,6 @@ import { SolutionSection } from './components/SolutionSection';
 import { HowItWorks } from './components/HowItWorks';
 import { Testimonials } from './components/Testimonials';
 import { FinalCTA } from './components/FinalCTA';
-import { Footer } from './components/Footer';
 import { Dashboard } from './pages/Dashboard';
 import { WizardLayout } from './pages/create/WizardLayout';
 import { PhotoUpload } from './pages/create/PhotoUpload';
@@ -26,7 +25,6 @@ function LandingPage() {
       <HowItWorks />
       <Testimonials />
       <FinalCTA />
-      <Footer />
     </div>
   );
 }
