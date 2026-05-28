@@ -1,7 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Star, ArrowRight } from 'lucide-react';
+import { Sparkles, Star, ArrowRight, Play, X } from 'lucide-react';
+
+const VIDEO_ID = '1yFahXuHIss';
 
 export function Hero() {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-sand-50 via-white to-ocean-50">
       <div className="absolute top-20 left-10 w-20 h-20 bg-brand-100 rounded-full opacity-60 animate-float" />
@@ -54,20 +59,32 @@ export function Hero() {
                     <Star key={i} className="w-4 h-4 fill-brand-400 text-brand-400" />
                   ))}
                 </div>
-                <p className="text-sm text-gray-500 mt-0.5">Loved by 2,400+ families</p>
+                <p className="text-sm text-gray-500 mt-0.5">Loved by families everywhere</p>
               </div>
             </div>
           </div>
 
           <div className="relative lg:pl-8">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-brand-900/10">
-              <img
-                src="https://images.pexels.com/photos/3661193/pexels-photo-3661193.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Child reading a personalized storybook"
-                className="w-full h-auto object-cover aspect-[4/3]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            <div className="mb-3 text-center">
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">From photo to storybook in minutes</p>
             </div>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="group relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-brand-900/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              aria-label="Play video"
+            >
+              <img
+                src={`https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`}
+                alt="From photo to storybook in minutes — watch the video"
+                className="w-full h-auto object-cover aspect-video"
+              />
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-200" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/95 shadow-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <Play className="w-7 h-7 sm:w-9 sm:h-9 text-brand-500 fill-brand-500 ml-1" />
+                </div>
+              </div>
+            </button>
 
             <div className="absolute -bottom-6 -left-4 sm:left-4 bg-white rounded-xl shadow-lg p-4 border border-gray-100 animate-float-delay">
               <div className="flex items-center gap-3">
@@ -92,6 +109,35 @@ export function Hero() {
           </div>
         </div>
       </div>
+
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setModalOpen(false)}
+              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors"
+              aria-label="Close video"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+            <div className="aspect-video">
+              <iframe
+                src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1`}
+                title="From photo to storybook in minutes"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
