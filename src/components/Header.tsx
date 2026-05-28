@@ -36,12 +36,6 @@ export function Header() {
             <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-brand-600 transition-colors">
               How It Works
             </a>
-            <a href="#features" className="text-sm font-medium text-gray-600 hover:text-brand-600 transition-colors">
-              Features
-            </a>
-            <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-brand-600 transition-colors">
-              FAQ
-            </a>
             <Link
               to="/create/photos"
               className="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-brand-500 rounded-full hover:bg-brand-600 transition-colors"
@@ -65,8 +59,6 @@ export function Header() {
           <nav className="flex flex-col px-4 py-4 gap-3">
             <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">Dashboard</Link>
             <a href="#how-it-works" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">How It Works</a>
-            <a href="#features" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">Features</a>
-            <a href="#faq" onClick={() => setMobileOpen(false)} className="py-2 text-gray-700 font-medium">FAQ</a>
             <Link to="/create/photos" onClick={() => setMobileOpen(false)} className="btn-primary text-center mt-2">Create a Story</Link>
           </nav>
         </div>
